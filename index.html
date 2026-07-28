@@ -1064,16 +1064,16 @@
 
     const statusEl = document.getElementById('sheetStatus');
     if(pendingSubmission){
-      statusEl.textContent = 'Googleスプレッドシートに送信中…';
+      statusEl.textContent = '送信中…';
       statusEl.style.color = 'var(--color-ink-soft)';
       sendToSheet(pendingSubmission).then(res=>{
         if(res.skipped){
           statusEl.textContent = '';
         } else if(res.sent){
-          statusEl.textContent = 'Googleスプレッドシートに送信しました。';
+          statusEl.textContent = '送信しました。';
           statusEl.style.color = 'var(--color-success)';
         } else {
-          statusEl.textContent = '送信に失敗しました。お手数ですが「内容をコピーする」から手動で共有してください。';
+          statusEl.textContent = '送信に失敗しました。お手数ですが、もう一度ご登録お願いします';
           statusEl.style.color = 'var(--color-seal)';
         }
       });
