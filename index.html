@@ -247,15 +247,16 @@
   /* ---------- Confirmation ---------- */
   #confirm{display:none;}
   .confirm-card{background:var(--color-surface); border:1px solid var(--color-line); border-radius:var(--radius-m); padding:32px 28px; position:relative; overflow:hidden;}
-  .confirm-card::before{content:""; position:absolute; top:0; left:0; right:0; height:4px; background:var(--color-seal);}
+  .confirm-card::before{content:""; position:absolute; top:0; left:0; right:0; height:4px; background:var(--color-success);}
   .confirm-head{display:flex; align-items:center; gap:16px; margin-bottom:22px;}
   .confirm-stamp{
-    width:52px; height:52px; flex-shrink:0; border:2px solid var(--color-seal); border-radius:50%;
-    display:flex; align-items:center; justify-content:center; color:var(--color-seal);
-    font-family:'Shippori Mincho',serif; font-weight:800; font-size:14px; transform:rotate(-6deg);
-    animation:stampIn .35s cubic-bezier(.2,1.4,.4,1) both; text-align:center; line-height:1.2;
+    width:48px; height:48px; flex-shrink:0; border-radius:50%;
+    background:rgba(61,122,92,0.12);
+    display:flex; align-items:center; justify-content:center;
+    animation:stampIn .3s ease both;
   }
-  @keyframes stampIn{ from{opacity:0; transform:scale(2) rotate(-6deg);} to{opacity:1; transform:scale(1) rotate(-6deg);} }
+  .confirm-stamp svg{width:22px; height:22px;}
+  @keyframes stampIn{ from{opacity:0; transform:scale(.6);} to{opacity:1; transform:scale(1);} }
   .confirm-head h2{font-family:'Shippori Mincho',serif; font-size:20px; margin:0 0 4px;}
   .confirm-head p{margin:0; font-size:13px; color:var(--color-ink-soft);}
   .confirm-table{width:100%; border-collapse:collapse; margin-bottom:22px;}
@@ -265,7 +266,6 @@
   .confirm-table td{padding:12px 0; font-size:14.5px;}
   .confirm-table .cchips{display:flex; flex-wrap:wrap; gap:6px;}
   .confirm-table .cchip{background:var(--color-seal-soft); color:var(--color-seal); font-size:12.5px; padding:4px 9px; border-radius:12px;}
-  .confirm-actions{display:flex; gap:10px; flex-wrap:wrap;}
 
   /* ---------- Modal (confirm-before-submit) ---------- */
   .modal-overlay{display:none; position:fixed; inset:0; background:rgba(28,35,51,0.45); z-index:50; align-items:center; justify-content:center; padding:20px;}
@@ -447,7 +447,9 @@
 
     <section id="confirm" class="card confirm-card">
       <div class="confirm-head">
-        <div class="confirm-stamp">確認</div>
+        <div class="confirm-stamp">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M4 12.5l5 5L20 6" stroke="#3D7A5C" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
         <div><h2>内容を確認しました</h2><p>下記の内容で面談日程の候補をお送りください。</p></div>
       </div>
       <table class="confirm-table">
@@ -456,10 +458,6 @@
         <tr><th>面談形式</th><td id="cFormat"></td></tr>
         <tr><th>候補日時</th><td><div class="cchips" id="cSlots"></div></td></tr>
       </table>
-      <div class="confirm-actions">
-        <button type="button" class="secondary" id="copyBtn">内容をコピーする<span class="copy-note" id="copyNote">コピーしました</span></button>
-        <button type="button" class="secondary" id="backBtn">編集に戻る</button>
-      </div>
       <p id="sheetStatus" style="font-size:12.5px; margin-top:14px;"></p>
     </section>
   </div>
@@ -494,7 +492,7 @@
   /* ▼▼▼ Googleスプレッドシート連携 ▼▼▼
      Google Apps Scriptで発行した「ウェブアプリのURL」をここに貼り付けてください。
      取得方法は返信メッセージの手順をご参照ください。 */
-  const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxJLqDgEkZQ4sZ9Cy56SWdo0QT4-x5EkhIKW1rmdYS8D0yV-PdJ9p4vMh19q9Yzb350/exec";
+  const WEBAPP_URL = "ここにGoogle Apps ScriptのウェブアプリURLを貼り付け";
 
   function sendToSheet(data){
     if(!WEBAPP_URL || WEBAPP_URL.indexOf('ここに') === 0){
@@ -1080,25 +1078,6 @@
         }
       });
     }
-  });
-
-  document.getElementById('backBtn').addEventListener('click', ()=>{
-    confirmSection.style.display = 'none';
-    form.style.display = 'block';
-    form.scrollIntoView({behavior:'smooth', block:'start'});
-  });
-
-  document.getElementById('copyBtn').addEventListener('click', ()=>{
-    const name = document.getElementById('cName').textContent;
-    const contact = document.getElementById('cContact').textContent;
-    const format = document.getElementById('cFormat').textContent;
-    const slots = Array.from(document.getElementById('cSlots').children).map(c=>'・'+c.textContent).join('\n');
-    const text = `【面談日程調整】\nお名前：${name}\n連絡先：${contact}\n面談形式：${format}\n候補日時：\n${slots}`;
-    navigator.clipboard.writeText(text).then(()=>{
-      const note = document.getElementById('copyNote');
-      note.classList.add('show');
-      setTimeout(()=>note.classList.remove('show'), 1800);
-    });
   });
 })();
 </script>
