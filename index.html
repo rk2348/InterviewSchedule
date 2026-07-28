@@ -79,12 +79,15 @@
   /* ---------- Form fields ---------- */
   .field-row{display:grid; grid-template-columns:1fr 1fr; gap:18px;}
   @media (max-width:600px){.field-row{grid-template-columns:1fr;}}
+  .field-row.range-row{grid-template-columns:1.3fr 1fr 1fr 1fr;}
+  @media (max-width:700px){.field-row.range-row{grid-template-columns:1fr 1fr;}}
+  @media (max-width:420px){.field-row.range-row{grid-template-columns:1fr;}}
   label.field{display:flex; flex-direction:column; gap:6px; font-size:13px; color:var(--color-ink-soft);}
   label.field span.req::after{
     content:"必須"; font-size:10px; color:var(--color-seal); border:1px solid var(--color-seal);
     padding:1px 5px; border-radius:3px; margin-left:8px; letter-spacing:.05em;
   }
-  input[type=text], input[type=email], input[type=tel]{
+  input[type=text], input[type=email], input[type=tel], input[type=date], input[type=number], select{
     font-family:'Noto Sans JP',sans-serif; font-size:15px; color:var(--color-ink);
     padding:11px 12px; border:1px solid var(--color-line); border-radius:var(--radius-s);
     background:#FCFBF8; outline:none; transition:border-color .15s, box-shadow .15s; width:100%;
@@ -265,7 +268,29 @@
     </header>
 
     <section class="card">
-      <div class="section-head"><span class="section-num">01</span><h2>対応不可な日時を指定</h2></div>
+      <div class="section-head"><span class="section-num">01</span><h2>期間・時間帯の設定</h2></div>
+      <p class="grid-hint">面談を受け付ける期間と時間帯を指定してください。「カレンダーを更新する」を押すと下の表に反映されます（対応不可の指定はリセットされます）。</p>
+      <div class="field-row range-row">
+        <label class="field"><span>開始日</span>
+          <input type="date" id="rangeStartDate">
+        </label>
+        <label class="field"><span>表示する日数</span>
+          <input type="number" id="rangeDays" min="1" max="60" value="14">
+        </label>
+        <label class="field"><span>開始時刻</span>
+          <select id="rangeStartHour"></select>
+        </label>
+        <label class="field"><span>終了時刻</span>
+          <select id="rangeEndHour"></select>
+        </label>
+      </div>
+      <div class="submit-row" style="justify-content:flex-start; margin-top:16px;">
+        <button type="button" class="secondary" id="applyRangeBtn">この内容でカレンダーを更新する</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="section-head"><span class="section-num">02</span><h2>対応不可な日時を指定</h2></div>
       <p class="grid-hint">セルをクリックすると「対応不可（×）」に切り替わります。もう一度クリックすると解除されます。</p>
       <div class="legend">
         <span><i class="open"></i>対応可能</span>
@@ -275,7 +300,7 @@
     </section>
 
     <section class="card">
-      <div class="section-head"><span class="section-num">02</span><h2>共有リンクを発行</h2></div>
+      <div class="section-head"><span class="section-num">03</span><h2>共有リンクを発行</h2></div>
       <p class="grid-hint">下のボタンでリンクを発行すると、設定した対応不可の日時が反映された回答用ページのURLが作成されます。面談を受ける方にこのリンクを共有してください。</p>
       <div class="submit-row" style="justify-content:flex-start;">
         <button type="button" class="primary" id="genLinkBtn">共有リンクを発行する</button>
@@ -288,7 +313,7 @@
     </section>
 
     <section class="card">
-      <div class="section-head"><span class="section-num">03</span><h2>回答一覧</h2></div>
+      <div class="section-head"><span class="section-num">04</span><h2>回答一覧</h2></div>
       <p class="grid-hint">Googleスプレッドシートに集まった回答を取得して表示します。</p>
       <div class="submit-row" style="justify-content:flex-start;">
         <button type="button" class="secondary" id="fetchResponsesBtn">回答を取得する</button>
@@ -427,7 +452,7 @@
   /* ▼▼▼ Googleスプレッドシート連携 ▼▼▼
      Google Apps Scriptで発行した「ウェブアプリのURL」をここに貼り付けてください。
      取得方法は返信メッセージの手順をご参照ください。 */
-  const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbx3gFO2cmD296tKyP7GVXPck3nbUAo-2fixKH5gUtK8bKq0RaaYoe_pnSB9qxsi5-0/exec";
+  const WEBAPP_URL = "ここにGoogle Apps ScriptのウェブアプリURLを貼り付け";
 
   function sendToSheet(data){
     if(!WEBAPP_URL || WEBAPP_URL.indexOf('ここに') === 0){
@@ -441,21 +466,26 @@
     }).then(()=>({sent:true})).catch(()=>({sent:false}));
   }
 
-  const DAYS = 14;
-  const START_HOUR = 9;
-  const END_HOUR = 19;
+  const DEFAULT_DAYS = 14;
+  const DEFAULT_START_HOUR = 9;
+  const DEFAULT_END_HOUR = 19;
   const dow = ['日','月','火','水','木','金','土'];
 
   function pad(n){return n.toString().padStart(2,'0');}
   function keyOf(d,h){return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(h)}`;}
   function labelOf(d,h){ return `${d.getMonth()+1}/${d.getDate()}(${dow[d.getDay()]}) ${pad(h)}:00`; }
-  function timesRange(){ const t=[]; for(let h=START_HOUR; h<=END_HOUR; h++) t.push(h); return t; }
+  function timesRange(startHour, endHour){ const t=[]; for(let h=startHour; h<=endHour; h++) t.push(h); return t; }
 
-  function datesFrom(base){
+  function datesFrom(base, days){
     const arr=[];
-    for(let i=0;i<DAYS;i++){ const d=new Date(base); d.setDate(base.getDate()+i); arr.push(d); }
+    for(let i=0;i<days;i++){ const d=new Date(base); d.setDate(base.getDate()+i); arr.push(d); }
     return arr;
   }
+
+  // 共有リンクを短くするためのエンコード用ヘルパー
+  function toEpochDays(d){ return Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000); }
+  function fromEpochDays(n){ const d = new Date(n * 86400000); return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()); }
+  function toDateInputValue(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
 
   const svgX = '<svg viewBox="0 0 16 16" fill="none"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9" stroke="#8A8F9C" stroke-width="2" stroke-linecap="round"/></svg>';
   const svgCheck = '<svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 4.5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -463,6 +493,7 @@
   /**
    * 汎用カレンダー描画
    * mode: 'admin'（クリックで対応不可を切替） / 'respondent'（対応不可は選べず、候補を選ぶ）
+   * ngSet: 対応不可スロットの「インデックス（数値）」を格納したSet
    */
   function renderTable(table, dates, times, ngSet, mode, onChange){
     table.innerHTML = '';
@@ -482,27 +513,28 @@
     table.appendChild(thead);
 
     const tbody = document.createElement('tbody');
-    times.forEach(h=>{
+    times.forEach((h,hIdx)=>{
       const tr = document.createElement('tr');
       const timeTd = document.createElement('td');
       timeTd.className = 'time-col'; timeTd.textContent = `${pad(h)}:00`;
       tr.appendChild(timeTd);
-      dates.forEach(d=>{
+      dates.forEach((d,dIdx)=>{
         const td = document.createElement('td');
         td.className = 'slot';
-        const k = keyOf(d,h);
-        td.dataset.key = k;
+        const idx = dIdx * times.length + hIdx;
+        td.dataset.key = keyOf(d,h);
         td.dataset.label = labelOf(d,h);
+        td.dataset.index = idx;
         const mark = document.createElement('span');
         mark.className = 'mark';
-        const isNg = ngSet.has(k);
+        const isNg = ngSet.has(idx);
 
         if(mode === 'admin'){
           if(isNg){ td.classList.add('ng'); mark.innerHTML = svgX; }
           td.appendChild(mark);
           td.addEventListener('click', ()=>{
-            if(ngSet.has(k)){ ngSet.delete(k); td.classList.remove('ng'); mark.innerHTML=''; }
-            else{ ngSet.add(k); td.classList.add('ng'); mark.innerHTML = svgX; }
+            if(ngSet.has(idx)){ ngSet.delete(idx); td.classList.remove('ng'); mark.innerHTML=''; }
+            else{ ngSet.add(idx); td.classList.add('ng'); mark.innerHTML = svgX; }
           });
         } else {
           if(isNg){
@@ -529,21 +561,69 @@
   /* ================= 管理者ビュー ================= */
   const adminView = document.getElementById('adminView');
   const respondentView = document.getElementById('respondentView');
-  const adminBase = (()=>{ const d = new Date(); d.setDate(d.getDate()+1); d.setHours(0,0,0,0); return d; })();
-  const adminDates = datesFrom(adminBase);
-  const times = timesRange();
-  const adminNgSet = new Set();
   const adminTable = document.getElementById('adminTable');
-  renderTable(adminTable, adminDates, times, adminNgSet, 'admin');
+  const adminNgSet = new Set(); // 対応不可スロットのインデックス（数値）を保持
 
-  function ymd(d){ return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`; }
+  const adminState = {
+    baseDate: (()=>{ const d = new Date(); d.setDate(d.getDate()+1); d.setHours(0,0,0,0); return d; })(),
+    days: DEFAULT_DAYS,
+    startHour: DEFAULT_START_HOUR,
+    endHour: DEFAULT_END_HOUR
+  };
+  let adminDates = [];
+  let adminTimes = [];
+
+  function populateHourSelects(){
+    const startSel = document.getElementById('rangeStartHour');
+    const endSel = document.getElementById('rangeEndHour');
+    for(let h=0; h<24; h++){
+      const o1 = document.createElement('option'); o1.value = h; o1.textContent = pad(h)+':00'; startSel.appendChild(o1);
+      const o2 = document.createElement('option'); o2.value = h; o2.textContent = pad(h)+':00'; endSel.appendChild(o2);
+    }
+    startSel.value = adminState.startHour;
+    endSel.value = adminState.endHour;
+  }
+
+  function rebuildAdminCalendar(){
+    adminDates = datesFrom(adminState.baseDate, adminState.days);
+    adminTimes = timesRange(adminState.startHour, adminState.endHour);
+    adminNgSet.clear();
+    renderTable(adminTable, adminDates, adminTimes, adminNgSet, 'admin');
+    document.getElementById('linkBox').style.display = 'none'; // 設定が変わったので既存のリンクは無効表示に
+  }
+
+  document.getElementById('rangeStartDate').value = toDateInputValue(adminState.baseDate);
+  document.getElementById('rangeDays').value = adminState.days;
+  populateHourSelects();
+  rebuildAdminCalendar();
+
+  document.getElementById('applyRangeBtn').addEventListener('click', ()=>{
+    const sv = document.getElementById('rangeStartDate').value;
+    const days = Math.min(60, Math.max(1, parseInt(document.getElementById('rangeDays').value, 10) || DEFAULT_DAYS));
+    const sh = parseInt(document.getElementById('rangeStartHour').value, 10);
+    const eh = parseInt(document.getElementById('rangeEndHour').value, 10);
+
+    if(!sv || isNaN(sh) || isNaN(eh) || sh >= eh){
+      alert('入力内容をご確認ください（開始時刻は終了時刻より前に設定してください）。');
+      return;
+    }
+    const [yy, mm, dd] = sv.split('-').map(Number);
+    adminState.baseDate = new Date(yy, mm-1, dd);
+    adminState.days = days;
+    adminState.startHour = sh;
+    adminState.endHour = eh;
+    document.getElementById('rangeDays').value = days;
+    rebuildAdminCalendar();
+  });
 
   document.getElementById('genLinkBtn').addEventListener('click', ()=>{
-    const startParam = ymd(adminBase);
-    const closedParam = Array.from(adminNgSet).join(',');
     const url = new URL(window.location.href.split('?')[0]);
-    url.searchParams.set('start', startParam);
-    url.searchParams.set('closed', closedParam);
+    url.searchParams.set('s', toEpochDays(adminState.baseDate).toString(36));
+    url.searchParams.set('d', adminState.days.toString(36));
+    url.searchParams.set('a', adminState.startHour.toString(36));
+    url.searchParams.set('b', adminState.endHour.toString(36));
+    const closedParam = Array.from(adminNgSet).map(n => n.toString(36)).join('.');
+    url.searchParams.set('c', closedParam);
     const linkBox = document.getElementById('linkBox');
     const linkOutput = document.getElementById('linkOutput');
     linkOutput.value = url.toString();
@@ -564,7 +644,7 @@
     adminView.style.display = 'none';
     respondentView.style.display = 'block';
     document.getElementById('previewNotice').style.display = 'block';
-    buildRespondentTable(adminBase, adminNgSet);
+    buildRespondentTable(adminState.baseDate, adminNgSet, adminState.days, adminState.startHour, adminState.endHour);
   });
 
   document.getElementById('backToAdminBtn').addEventListener('click', ()=>{
