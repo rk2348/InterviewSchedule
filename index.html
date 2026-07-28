@@ -729,7 +729,6 @@
   /* ================= 回答者ビュー ================= */
   const respTable = document.getElementById('respTable');
   const chipsEl = document.getElementById('chips');
-  let respDates = [];
 
   function renderChips(){
     chipsEl.innerHTML = '';
@@ -752,25 +751,30 @@
     });
   }
 
-  function buildRespondentTable(baseDate, ngSet){
-    respDates = datesFrom(baseDate);
-    renderTable(respTable, respDates, times, ngSet, 'respondent', renderChips);
+  function buildRespondentTable(baseDate, ngSet, days, startHour, endHour){
+    const respDates = datesFrom(baseDate, days);
+    const respTimes = timesRange(startHour, endHour);
+    renderTable(respTable, respDates, respTimes, ngSet, 'respondent', renderChips);
     renderChips();
   }
 
   /* URLパラメータの解析（共有リンクから開かれた場合） */
   const params = new URLSearchParams(window.location.search);
-  const startParam = params.get('start');
-  if(startParam && /^\d{8}$/.test(startParam)){
-    const y = parseInt(startParam.slice(0,4),10);
-    const m = parseInt(startParam.slice(4,6),10)-1;
-    const day = parseInt(startParam.slice(6,8),10);
-    const base = new Date(y,m,day);
-    const closedParam = params.get('closed') || '';
-    const ngSet = new Set(closedParam.split(',').filter(Boolean));
-    adminView.style.display = 'none';
-    respondentView.style.display = 'block';
-    buildRespondentTable(base, ngSet);
+  const sParam = params.get('s');
+  if(sParam){
+    const epochDays = parseInt(sParam, 36);
+    const base = fromEpochDays(epochDays);
+    const days = params.has('d') ? parseInt(params.get('d'), 36) : DEFAULT_DAYS;
+    const startHour = params.has('a') ? parseInt(params.get('a'), 36) : DEFAULT_START_HOUR;
+    const endHour = params.has('b') ? parseInt(params.get('b'), 36) : DEFAULT_END_HOUR;
+    const closedParam = params.get('c') || '';
+    const ngSet = new Set(closedParam.split('.').filter(Boolean).map(v => parseInt(v, 36)));
+
+    if(!isNaN(epochDays) && !isNaN(days) && !isNaN(startHour) && !isNaN(endHour)){
+      adminView.style.display = 'none';
+      respondentView.style.display = 'block';
+      buildRespondentTable(base, ngSet, days, startHour, endHour);
+    }
   }
 
   /* ---------- 面談形式 ---------- */
