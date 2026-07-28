@@ -199,6 +199,22 @@
     display:inline-block; background:var(--color-seal-soft); color:var(--color-seal);
     font-size:11px; padding:3px 8px; border-radius:10px; margin:2px 4px 2px 0; white-space:nowrap;
   }
+  .status-badge{
+    border:none; cursor:pointer; font-family:'Noto Sans JP',sans-serif;
+    font-size:11.5px; font-weight:500; padding:6px 12px; border-radius:14px;
+    white-space:nowrap; transition:background .15s, opacity .15s;
+  }
+  .status-badge:disabled{cursor:default; opacity:.6;}
+  .status-badge.status-pending{background:var(--color-ng-bg); color:var(--color-ink-soft);}
+  .status-badge.status-pending:hover:not(:disabled){background:#E4E1D6;}
+  .status-badge.status-done{background:rgba(61,122,92,0.15); color:var(--color-success);}
+  .status-badge.status-done:hover:not(:disabled){background:rgba(61,122,92,0.24);}
+
+  table.resp-list-table tr.done{background:rgba(61,122,92,0.045);}
+  table.resp-list-table tr.done td{color:var(--color-ink-soft);}
+  table.resp-list-table tr.done td:nth-child(2){
+    text-decoration:line-through; text-decoration-color:var(--color-success); text-decoration-thickness:1.5px;
+  }
 
   /* ---------- Link output ---------- */
   .link-box{
@@ -472,9 +488,10 @@
   const dow = ['日','月','火','水','木','金','土'];
 
   function pad(n){return n.toString().padStart(2,'0');}
-  function keyOf(d,h){return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(h)}`;}
-  function labelOf(d,h){ return `${d.getMonth()+1}/${d.getDate()}(${dow[d.getDay()]}) ${pad(h)}:00`; }
-  function timesRange(startHour, endHour){ const t=[]; for(let h=startHour; h<=endHour; h++) t.push(h); return t; }
+  function hmParts(mins){ return { h: Math.floor(mins/60), m: mins % 60 }; }
+  function keyOf(d,mins){ const {h,m}=hmParts(mins); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(h)}${pad(m)}`; }
+  function labelOf(d,mins){ const {h,m}=hmParts(mins); return `${d.getMonth()+1}/${d.getDate()}(${dow[d.getDay()]}) ${pad(h)}:${pad(m)}`; }
+  function timesRange(startHour, endHour){ const t=[]; for(let mins=startHour*60; mins<=endHour*60; mins+=30) t.push(mins); return t; }
 
   function datesFrom(base, days){
     const arr=[];
@@ -513,17 +530,18 @@
     table.appendChild(thead);
 
     const tbody = document.createElement('tbody');
-    times.forEach((h,hIdx)=>{
+    times.forEach((mins,hIdx)=>{
       const tr = document.createElement('tr');
       const timeTd = document.createElement('td');
-      timeTd.className = 'time-col'; timeTd.textContent = `${pad(h)}:00`;
+      const tp = hmParts(mins);
+      timeTd.className = 'time-col'; timeTd.textContent = `${pad(tp.h)}:${pad(tp.m)}`;
       tr.appendChild(timeTd);
       dates.forEach((d,dIdx)=>{
         const td = document.createElement('td');
         td.className = 'slot';
         const idx = dIdx * times.length + hIdx;
-        td.dataset.key = keyOf(d,h);
-        td.dataset.label = labelOf(d,h);
+        td.dataset.key = keyOf(d,mins);
+        td.dataset.label = labelOf(d,mins);
         td.dataset.index = idx;
         const mark = document.createElement('span');
         mark.className = 'mark';
@@ -680,6 +698,29 @@
     }
   }
 
+  async function onToggleStatus(e){
+    const btn = e.currentTarget;
+    const rowNum = btn.dataset.row;
+    const current = btn.dataset.status;
+    const next = current === '面接完了' ? '未完了' : '面接完了';
+    const originalLabel = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '更新中…';
+    try{
+      await fetch(WEBAPP_URL, {
+        method:'POST',
+        mode:'no-cors', // 応答は読み取れないため、下の再取得で反映を確認する
+        headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body: JSON.stringify({ action:'updateStatus', row: Number(rowNum), status: next })
+      });
+      await loadResponses();
+    }catch(err){
+      btn.disabled = false;
+      btn.textContent = originalLabel;
+      alert('ステータスの更新に失敗しました。通信環境をご確認のうえ、もう一度お試しください。');
+    }
+  }
+
   function renderResponses(data){
     // ---- 人気の候補日時ランキング ----
     const counts = {};
@@ -711,19 +752,26 @@
 
     const sorted = [...data].sort((a,b)=> new Date(b.timestamp) - new Date(a.timestamp));
     const thead = document.createElement('thead');
-    thead.innerHTML = '<tr><th>送信日時</th><th>お名前</th><th>連絡先</th><th>面談形式</th><th>候補日時</th></tr>';
+    thead.innerHTML = '<tr><th>送信日時</th><th>お名前</th><th>連絡先</th><th>面談形式</th><th>候補日時</th><th>ステータス</th></tr>';
     table.appendChild(thead);
     const tbody = document.createElement('tbody');
     sorted.forEach(row=>{
       const tr = document.createElement('tr');
+      const isDone = row.status === '面接完了';
+      tr.className = isDone ? 'done' : '';
       const dt = new Date(row.timestamp);
       const dtLabel = isNaN(dt) ? escapeHtml(row.timestamp) : `${dt.getFullYear()}/${dt.getMonth()+1}/${dt.getDate()} ${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
       const slotsHtml = (row.slots||[]).map(s=>`<span class="slot-chip">${escapeHtml(s)}</span>`).join('');
-      tr.innerHTML = `<td class="ts">${dtLabel}</td><td>${escapeHtml(row.name)}</td><td>${escapeHtml(row.contact)}</td><td>${escapeHtml(row.format)}</td><td>${slotsHtml}</td>`;
+      const statusHtml = `<button type="button" class="status-badge ${isDone?'status-done':'status-pending'}" data-row="${row.row}" data-status="${escapeHtml(row.status)}">${isDone ? '✓ 面接完了' : '対応待ち'}</button>`;
+      tr.innerHTML = `<td class="ts">${dtLabel}</td><td>${escapeHtml(row.name)}</td><td>${escapeHtml(row.contact)}</td><td>${escapeHtml(row.format)}</td><td>${slotsHtml}</td><td>${statusHtml}</td>`;
       tbody.appendChild(tr);
     });
     table.appendChild(tbody);
     tableBlock.style.display = 'block';
+
+    table.querySelectorAll('.status-badge').forEach(btn=>{
+      btn.addEventListener('click', onToggleStatus);
+    });
   }
 
   /* ================= 回答者ビュー ================= */
