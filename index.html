@@ -137,6 +137,8 @@
   th.date-col .dnum{display:block; font-family:'Shippori Mincho',serif; font-size:16px;}
   th.date-col.sat .dow, th.date-col.sat .dnum{color:var(--color-sat);}
   th.date-col.sun .dow, th.date-col.sun .dnum{color:var(--color-sun);}
+  th.date-col.clickable-day{cursor:pointer; user-select:none; transition:background .12s;}
+  th.date-col.clickable-day:hover{background:var(--color-seal-soft);}
 
   td.slot{width:46px; height:38px; cursor:pointer; position:relative; transition:background .12s;}
   td.slot:hover{background:#F3F0E8;}
@@ -294,7 +296,7 @@
       <div class="hero-text">
         <div class="mode-badge">ADMIN SETUP</div>
         <h1>日程設定（管理者用）</h1>
-        <p>面談を受け付けたい日時をカレンダーから選んでください。クリックした箇所は「対応不可」として、回答者の画面に×印で表示され、選べなくなります。</p>
+        <p>面談を受け付けたい日時をカレンダーから選んでください。クリックした箇所は「対応不可」として、回答者の画面に×印で表示され、選べなくなります。日付（曜日）の見出しをクリックすると、その日をまとめて対応不可にできます。</p>
       </div>
       <svg class="seal" viewBox="0 0 74 74" fill="none">
         <circle cx="37" cy="37" r="34" stroke="#B23A2E" stroke-width="2.5"/>
@@ -327,7 +329,7 @@
 
     <section class="card">
       <div class="section-head"><span class="section-num">02</span><h2>対応不可な日時を指定</h2></div>
-      <p class="grid-hint">セルをクリックすると「対応不可（×）」に切り替わります。もう一度クリックすると解除されます。</p>
+      <p class="grid-hint">セルをクリックすると「対応不可（×）」に切り替わります。もう一度クリックすると解除されます。日付の見出し（例：7/29(水)）をクリックすると、その日をまとめて対応不可／解除できます。</p>
       <div class="legend">
         <span><i class="open"></i>対応可能</span>
         <span><i class="ng"></i>対応不可（×）</span>
@@ -543,11 +545,33 @@
     const corner = document.createElement('th');
     corner.className = 'time-col'; corner.textContent = '時間';
     headRow.appendChild(corner);
-    dates.forEach(d=>{
+    dates.forEach((d,dIdx)=>{
       const th = document.createElement('th');
       const day = d.getDay();
       th.className = 'date-col' + (day===0?' sun':day===6?' sat':'');
       th.innerHTML = `<span class="dow">${dow[day]}</span><span class="dnum">${d.getMonth()+1}/${d.getDate()}</span>`;
+      th.dataset.dindex = dIdx;
+      if(mode === 'admin'){
+        th.classList.add('clickable-day');
+        th.title = 'クリックでこの日をまとめて対応不可にする（もう一度クリックで解除）';
+        th.addEventListener('click', ()=>{
+          const cells = table.querySelectorAll(`td.slot[data-dindex="${dIdx}"]`);
+          const allNg = Array.from(cells).every(td => ngSet.has(parseInt(td.dataset.index,10)));
+          cells.forEach(td=>{
+            const idx = parseInt(td.dataset.index,10);
+            const mark = td.querySelector('.mark');
+            if(allNg){
+              ngSet.delete(idx);
+              td.classList.remove('ng');
+              if(mark) mark.innerHTML = '';
+            } else {
+              ngSet.add(idx);
+              td.classList.add('ng');
+              if(mark) mark.innerHTML = svgX;
+            }
+          });
+        });
+      }
       headRow.appendChild(th);
     });
     thead.appendChild(headRow);
@@ -567,6 +591,7 @@
         td.dataset.key = keyOf(d,mins);
         td.dataset.label = labelOf(d,mins);
         td.dataset.index = idx;
+        td.dataset.dindex = dIdx;
         const mark = document.createElement('span');
         mark.className = 'mark';
         const isNg = ngSet.has(idx);
