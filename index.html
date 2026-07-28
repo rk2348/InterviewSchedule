@@ -420,7 +420,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
               <path d="M4 21V8l8-5 8 5v13"/><path d="M9 21v-6h6v6"/><path d="M9 11h.01M15 11h.01M9 15h.01M15 15h.01"/>
             </svg>
-            <div><div class="fc-title">対面</div><div class="fc-sub">オフィスにて実施</div></div>
+            <div><div class="fc-title">対面</div><div class="fc-sub">自習室にて実施</div></div>
           </div>
         </div>
         <input type="hidden" id="format" name="format" required>
@@ -492,7 +492,7 @@
   /* ▼▼▼ Googleスプレッドシート連携 ▼▼▼
      Google Apps Scriptで発行した「ウェブアプリのURL」をここに貼り付けてください。
      取得方法は返信メッセージの手順をご参照ください。 */
-  const WEBAPP_URL = "ここにGoogle Apps ScriptのウェブアプリURLを貼り付け";
+  const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzNcN52YbO0hP-_mENDc6zTFwQtbSdQHXRym54TLl5FDCL0WMDsf88qE0UAZEyBxfT-/exec";
 
   function sendToSheet(data){
     if(!WEBAPP_URL || WEBAPP_URL.indexOf('ここに') === 0){
@@ -1064,13 +1064,13 @@
 
     const statusEl = document.getElementById('sheetStatus');
     if(pendingSubmission){
-      statusEl.textContent = 'Googleスプレッドシートに送信中…';
+      statusEl.textContent = '送信中…';
       statusEl.style.color = 'var(--color-ink-soft)';
       sendToSheet(pendingSubmission).then(res=>{
         if(res.skipped){
           statusEl.textContent = '';
         } else if(res.sent){
-          statusEl.textContent = 'Googleスプレッドシートに送信しました。';
+          statusEl.textContent = '送信しました。';
           statusEl.style.color = 'var(--color-success)';
         } else {
           statusEl.textContent = '送信に失敗しました。お手数ですが「内容をコピーする」から手動で共有してください。';
