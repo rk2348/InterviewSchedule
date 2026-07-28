@@ -229,6 +229,12 @@
   }
   button.danger:hover:not(:disabled){background:#8F2E24;}
   button.danger:disabled{opacity:.6; cursor:default;}
+  button.danger-outline{
+    font-family:'Noto Sans JP',sans-serif; font-size:13.5px; color:var(--color-seal); background:#fff;
+    border:1px solid var(--color-seal); padding:10px 18px; border-radius:var(--radius-s);
+    cursor:pointer; transition:background .15s;
+  }
+  button.danger-outline:hover{background:var(--color-seal-soft);}
 
   /* ---------- Link output ---------- */
   .link-box{
@@ -347,6 +353,7 @@
       <p class="grid-hint">Googleスプレッドシートに集まった回答を取得して表示します。</p>
       <div class="submit-row" style="justify-content:flex-start;">
         <button type="button" class="secondary" id="fetchResponsesBtn">回答を取得する</button>
+        <button type="button" class="danger-outline" id="clearAllBtn">回答一覧をクリアにする</button>
       </div>
       <p id="responsesStatus" style="font-size:12.5px; color:var(--color-ink-soft); margin-top:12px;"></p>
 
@@ -487,7 +494,7 @@
   /* ▼▼▼ Googleスプレッドシート連携 ▼▼▼
      Google Apps Scriptで発行した「ウェブアプリのURL」をここに貼り付けてください。
      取得方法は返信メッセージの手順をご参照ください。 */
-  const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyLABrHxzM4AT6_bZY2xQF9LDoC6JqPje8FZIG0pAfw0sT0_atuDLG9sFDxka3SgLyM/exec";
+  const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxJLqDgEkZQ4sZ9Cy56SWdo0QT4-x5EkhIKW1rmdYS8D0yV-PdJ9p4vMh19q9Yzb350/exec";
 
   function sendToSheet(data){
     if(!WEBAPP_URL || WEBAPP_URL.indexOf('ここに') === 0){
@@ -800,6 +807,70 @@
         mode:'no-cors',
         headers:{'Content-Type':'text/plain;charset=utf-8'},
         body: JSON.stringify({ action:'delete', row: deleteTarget.row })
+      });
+      closeDeleteModal();
+      await loadResponses();
+    }catch(err){
+      btn.disabled = false;
+      btn.textContent = '完全に削除する';
+      alert('削除に失敗しました。通信環境をご確認のうえ、もう一度お試しください。');
+    }
+  }
+
+  /* ---------- 回答一覧を全件クリア（2段階確認＋入力確認） ---------- */
+  document.getElementById('clearAllBtn').addEventListener('click', openClearAllModal);
+
+  function openClearAllModal(){
+    if(!lastResponses.length){
+      alert('削除できる回答がありません。');
+      return;
+    }
+    renderClearStep(1);
+    deleteModalOverlay.classList.add('show');
+  }
+
+  function renderClearStep(step){
+    if(step === 1){
+      deleteModalBox.innerHTML = `
+        <h3>回答一覧をすべて削除しますか？</h3>
+        <p class="modal-sub">現在保存されている${lastResponses.length}件の回答が、すべて削除されます。</p>
+        <div class="modal-actions">
+          <button type="button" class="secondary" id="clearStep1Cancel">キャンセル</button>
+          <button type="button" class="danger" id="clearStep1Next">次へ進む</button>
+        </div>`;
+      document.getElementById('clearStep1Cancel').addEventListener('click', closeDeleteModal);
+      document.getElementById('clearStep1Next').addEventListener('click', ()=>renderClearStep(2));
+    } else {
+      deleteModalBox.innerHTML = `
+        <h3>本当にすべて削除しますか？</h3>
+        <p class="modal-sub" style="color:var(--color-seal);">この操作は取り消せません。よろしければ下の欄に「すべて削除」と入力してください。</p>
+        <label class="field" style="margin-bottom:18px;">
+          <input type="text" id="clearConfirmInput" placeholder="すべて削除" autocomplete="off">
+        </label>
+        <div class="modal-actions">
+          <button type="button" class="secondary" id="clearStep2Cancel">キャンセル</button>
+          <button type="button" class="danger" id="clearStep2Confirm" disabled>完全に削除する</button>
+        </div>`;
+      const input = document.getElementById('clearConfirmInput');
+      const confirmBtn = document.getElementById('clearStep2Confirm');
+      input.addEventListener('input', ()=>{
+        confirmBtn.disabled = input.value.trim() !== 'すべて削除';
+      });
+      document.getElementById('clearStep2Cancel').addEventListener('click', closeDeleteModal);
+      confirmBtn.addEventListener('click', executeClearAll);
+    }
+  }
+
+  async function executeClearAll(){
+    const btn = document.getElementById('clearStep2Confirm');
+    btn.disabled = true;
+    btn.textContent = '削除中…';
+    try{
+      await fetch(WEBAPP_URL, {
+        method:'POST',
+        mode:'no-cors',
+        headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body: JSON.stringify({ action:'clearAll' })
       });
       closeDeleteModal();
       await loadResponses();
