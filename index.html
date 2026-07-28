@@ -215,6 +215,20 @@
   table.resp-list-table tr.done td:nth-child(2){
     text-decoration:line-through; text-decoration-color:var(--color-success); text-decoration-thickness:1.5px;
   }
+  .row-delete-btn{
+    border:1px solid var(--color-line); background:#fff; color:var(--color-ink-soft);
+    font-size:11.5px; padding:5px 10px; border-radius:6px; cursor:pointer;
+    transition:border-color .15s, color .15s; white-space:nowrap;
+  }
+  .row-delete-btn:hover{border-color:var(--color-seal); color:var(--color-seal);}
+
+  button.danger{
+    font-family:'Noto Sans JP',sans-serif; font-size:13.5px; font-weight:500; color:#fff;
+    background:var(--color-seal); border:none; padding:10px 18px; border-radius:var(--radius-s);
+    cursor:pointer; transition:background .15s;
+  }
+  button.danger:hover:not(:disabled){background:#8F2E24;}
+  button.danger:disabled{opacity:.6; cursor:default;}
 
   /* ---------- Link output ---------- */
   .link-box{
@@ -461,6 +475,11 @@
     </div>
   </div>
 
+  <!-- ============ 削除用 2段階確認モーダル ============ -->
+  <div class="modal-overlay" id="deleteModalOverlay">
+    <div class="modal-box" id="deleteModalBox"></div>
+  </div>
+
 </div>
 
 <script>
@@ -468,7 +487,7 @@
   /* ▼▼▼ Googleスプレッドシート連携 ▼▼▼
      Google Apps Scriptで発行した「ウェブアプリのURL」をここに貼り付けてください。
      取得方法は返信メッセージの手順をご参照ください。 */
-  const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzIxOfJk9yG8jhaf3hMUlzTkYJfay4_MBkMbVjctAqY9UdaUVRnzpUO-TxN_YUC37e-/exec";
+  const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyLABrHxzM4AT6_bZY2xQF9LDoC6JqPje8FZIG0pAfw0sT0_atuDLG9sFDxka3SgLyM/exec";
 
   function sendToSheet(data){
     if(!WEBAPP_URL || WEBAPP_URL.indexOf('ここに') === 0){
@@ -676,6 +695,8 @@
 
   document.getElementById('fetchResponsesBtn').addEventListener('click', loadResponses);
 
+  let lastResponses = [];
+
   async function loadResponses(){
     const statusEl = document.getElementById('responsesStatus');
     if(!WEBAPP_URL || WEBAPP_URL.indexOf('ここに') === 0){
@@ -721,7 +742,77 @@
     }
   }
 
+  /* ---------- 回答の削除（2段階確認） ---------- */
+  const deleteModalOverlay = document.getElementById('deleteModalOverlay');
+  const deleteModalBox = document.getElementById('deleteModalBox');
+  let deleteTarget = null;
+
+  function openDeleteModal(rowNum){
+    deleteTarget = lastResponses.find(r => r.row === rowNum);
+    if(!deleteTarget) return;
+    renderDeleteStep(1);
+    deleteModalOverlay.classList.add('show');
+  }
+
+  function closeDeleteModal(){
+    deleteModalOverlay.classList.remove('show');
+    deleteTarget = null;
+  }
+
+  function renderDeleteStep(step){
+    if(!deleteTarget) return;
+    if(step === 1){
+      deleteModalBox.innerHTML = `
+        <h3>この回答を削除しますか？</h3>
+        <p class="modal-sub">以下の内容が削除対象です。内容をご確認のうえ、次にお進みください。</p>
+        <table class="modal-table">
+          <tr><th>お名前</th><td>${escapeHtml(deleteTarget.name)}</td></tr>
+          <tr><th>連絡先</th><td>${escapeHtml(deleteTarget.contact)}</td></tr>
+          <tr><th>面談形式</th><td>${escapeHtml(deleteTarget.format)}</td></tr>
+        </table>
+        <div class="modal-actions">
+          <button type="button" class="secondary" id="deleteStep1Cancel">キャンセル</button>
+          <button type="button" class="danger" id="deleteStep1Next">次へ進む</button>
+        </div>`;
+      document.getElementById('deleteStep1Cancel').addEventListener('click', closeDeleteModal);
+      document.getElementById('deleteStep1Next').addEventListener('click', ()=>renderDeleteStep(2));
+    } else {
+      deleteModalBox.innerHTML = `
+        <h3>本当に削除しますか？</h3>
+        <p class="modal-sub" style="color:var(--color-seal);">この操作は取り消せません。「${escapeHtml(deleteTarget.name)}」さんの回答が完全に削除されます。</p>
+        <div class="modal-actions">
+          <button type="button" class="secondary" id="deleteStep2Cancel">キャンセル</button>
+          <button type="button" class="danger" id="deleteStep2Confirm">完全に削除する</button>
+        </div>`;
+      document.getElementById('deleteStep2Cancel').addEventListener('click', closeDeleteModal);
+      document.getElementById('deleteStep2Confirm').addEventListener('click', executeDelete);
+    }
+  }
+
+  async function executeDelete(){
+    if(!deleteTarget) return;
+    const btn = document.getElementById('deleteStep2Confirm');
+    btn.disabled = true;
+    btn.textContent = '削除中…';
+    try{
+      await fetch(WEBAPP_URL, {
+        method:'POST',
+        mode:'no-cors',
+        headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body: JSON.stringify({ action:'delete', row: deleteTarget.row })
+      });
+      closeDeleteModal();
+      await loadResponses();
+    }catch(err){
+      btn.disabled = false;
+      btn.textContent = '完全に削除する';
+      alert('削除に失敗しました。通信環境をご確認のうえ、もう一度お試しください。');
+    }
+  }
+
   function renderResponses(data){
+    lastResponses = data;
+
     // ---- 人気の候補日時ランキング ----
     const counts = {};
     data.forEach(row=>{
@@ -752,7 +843,7 @@
 
     const sorted = [...data].sort((a,b)=> new Date(b.timestamp) - new Date(a.timestamp));
     const thead = document.createElement('thead');
-    thead.innerHTML = '<tr><th>送信日時</th><th>お名前</th><th>連絡先</th><th>面談形式</th><th>候補日時</th><th>ステータス</th></tr>';
+    thead.innerHTML = '<tr><th>送信日時</th><th>お名前</th><th>連絡先</th><th>面談形式</th><th>候補日時</th><th>ステータス</th><th>操作</th></tr>';
     table.appendChild(thead);
     const tbody = document.createElement('tbody');
     sorted.forEach(row=>{
@@ -763,7 +854,8 @@
       const dtLabel = isNaN(dt) ? escapeHtml(row.timestamp) : `${dt.getFullYear()}/${dt.getMonth()+1}/${dt.getDate()} ${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
       const slotsHtml = (row.slots||[]).map(s=>`<span class="slot-chip">${escapeHtml(s)}</span>`).join('');
       const statusHtml = `<button type="button" class="status-badge ${isDone?'status-done':'status-pending'}" data-row="${row.row}" data-status="${escapeHtml(row.status)}">${isDone ? '✓ 面接完了' : '対応待ち'}</button>`;
-      tr.innerHTML = `<td class="ts">${dtLabel}</td><td>${escapeHtml(row.name)}</td><td>${escapeHtml(row.contact)}</td><td>${escapeHtml(row.format)}</td><td>${slotsHtml}</td><td>${statusHtml}</td>`;
+      const deleteHtml = `<button type="button" class="row-delete-btn" data-row="${row.row}">削除</button>`;
+      tr.innerHTML = `<td class="ts">${dtLabel}</td><td>${escapeHtml(row.name)}</td><td>${escapeHtml(row.contact)}</td><td>${escapeHtml(row.format)}</td><td>${slotsHtml}</td><td>${statusHtml}</td><td>${deleteHtml}</td>`;
       tbody.appendChild(tr);
     });
     table.appendChild(tbody);
@@ -771,6 +863,9 @@
 
     table.querySelectorAll('.status-badge').forEach(btn=>{
       btn.addEventListener('click', onToggleStatus);
+    });
+    table.querySelectorAll('.row-delete-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>openDeleteModal(Number(btn.dataset.row)));
     });
   }
 
