@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>面談日程調整シート</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;800&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --color-bg:#F7F5EF;
+    --color-surface:#FFFFFF;
+    --color-ink:#1C2333;
+    --color-ink-soft:#5B6274;
+    --color-line:#DDD6C6;
+    --color-seal:#B23A2E;
+    --color-seal-soft:rgba(178,58,46,0.10);
+    --color-seal-soft2:rgba(178,58,46,0.18);
+    --color-gold:#A8823C;
+    --color-success:#3D7A5C;
+    --color-sat:#2C5C8A;
+    --color-sun:#B23A2E;
+    --radius-s:4px;
+    --radius-m:8px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--color-bg);
+    color:var(--color-ink);
+    font-family:'Noto Sans JP',sans-serif;
+    font-weight:400;
+    line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+  }
+  .paper-texture{
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(28,35,51,0.035) 1px, transparent 0);
+    background-size:14px 14px;
+  }
+  .page{
+    max-width:920px;
+    margin:0 auto;
+    padding:48px 20px 100px;
+  }
+  /* ---------- Header ---------- */
+  header.hero{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:24px;
+    padding-bottom:28px;
+    margin-bottom:36px;
+    border-bottom:1px solid var(--color-line);
+    opacity:0;
+    animation:fadeUp .7s ease forwards;
+  }
+  .hero-text .eyebrow{
+    font-size:12px;
+    letter-spacing:.18em;
+    color:var(--color-gold);
+    font-weight:500;
+    margin-bottom:10px;
+  }
+  .hero-text h1{
+    font-family:'Shippori Mincho',serif;
+    font-weight:800;
+    font-size:clamp(26px,4vw,38px);
+    margin:0 0 10px;
+    letter-spacing:.02em;
+  }
+  .hero-text p{
+    margin:0;
+    color:var(--color-ink-soft);
+    font-size:14px;
+    max-width:46ch;
+  }
+  .seal{
+    flex-shrink:0;
+    width:74px;height:74px;
+  }
+  @keyframes fadeUp{
+    from{opacity:0; transform:translateY(10px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+
+  /* ---------- Sections ---------- */
+  section.card{
+    background:var(--color-surface);
+    border:1px solid var(--color-line);
+    border-radius:var(--radius-m);
+    padding:28px 26px;
+    margin-bottom:24px;
+    opacity:0;
+    animation:fadeUp .6s ease forwards;
+  }
+  section.card:nth-of-type(1){animation-delay:.05s;}
+  section.card:nth-of-type(2){animation-delay:.12s;}
+  section.card:nth-of-type(3){animation-delay:.19s;}
+
+  .section-head{
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+    margin-bottom:20px;
+  }
+  .section-num{
+    font-family:'Shippori Mincho',serif;
+    font-size:13px;
+    color:var(--color-gold);
+    letter-spacing:.1em;
+  }
+  .section-head h2{
+    font-family:'Shippori Mincho',serif;
+    font-size:19px;
+    font-weight:600;
+    margin:0;
+  }
+
+  /* ---------- Form fields ---------- */
+  .field-row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:18px;
+  }
+  @media (max-width:600px){
+    .field-row{grid-template-columns:1fr;}
+  }
+  label.field{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    font-size:13px;
+    color:var(--color-ink-soft);
+  }
+  label.field span.req::after{
+    content:"必須";
+    font-size:10px;
+    color:var(--color-seal);
+    border:1px solid var(--color-seal);
+    padding:1px 5px;
+    border-radius:3px;
+    margin-left:8px;
+    letter-spacing:.05em;
+  }
+  input[type=text], input[type=email], input[type=tel]{
+    font-family:'Noto Sans JP',sans-serif;
+    font-size:15px;
+    color:var(--color-ink);
+    padding:11px 12px;
+    border:1px solid var(--color-line);
+    border-radius:var(--radius-s);
+    background:#FCFBF8;
+    outline:none;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  input:focus-visible{
+    border-color:var(--color-seal);
+    box-shadow:0 0 0 3px var(--color-seal-soft);
+  }
+
+  /* ---------- Format cards ---------- */
+  .format-options{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+  }
+  @media (max-width:600px){
+    .format-options{grid-template-columns:1fr;}
+  }
+  .format-card{
+    position:relative;
+    border:1px solid var(--color-line);
+    border-radius:var(--radius-m);
+    padding:18px 16px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    background:#FCFBF8;
+    transition:border-color .15s, background .15s;
+  }
+  .format-card:hover{border-color:var(--color-gold);}
+  .format-card.selected{
+    border-color:var(--color-seal);
+    background:var(--color-seal-soft);
+  }
+  .format-card svg{flex-shrink:0;width:30px;height:30px;color:var(--color-ink-soft);}
+  .format-card.selected svg{color:var(--color-seal);}
+  .format-card .fc-title{font-weight:500;font-size:15px;}
+  .format-card .fc-sub{font-size:12px;color:var(--color-ink-soft);margin-top:2px;}
+  .format-card .check{
+    position:absolute;top:12px;right:12px;
+    width:16px;height:16px;border-radius:50%;
+    border:1.5px solid var(--color-line);
+  }
+  .format-card.selected .check{
+    border-color:var(--color-seal);
+    background:var(--color-seal);
+    box-shadow:inset 0 0 0 3px #fff;
+  }
+
+  /* ---------- Calendar grid ---------- */
+  .grid-hint{
+    font-size:12.5px;
+    color:var(--color-ink-soft);
+    margin-bottom:14px;
+  }
+  .grid-scroll{
+    overflow-x:auto;
+    border:1px solid var(--color-line);
+    border-radius:var(--radius-m);
+    -webkit-overflow-scrolling:touch;
+  }
+  table.slot-table{
+    border-collapse:separate;
+    border-spacing:0;
+    width:100%;
+  }
+  table.slot-table th, table.slot-table td{
+    border-bottom:1px solid var(--color-line);
+    border-right:1px solid var(--color-line);
+    text-align:center;
+    white-space:nowrap;
+  }
+  table.slot-table th.time-col, table.slot-table td.time-col{
+    position:sticky;left:0;
+    background:var(--color-surface);
+    z-index:2;
+    font-size:12px;
+    color:var(--color-ink-soft);
+    padding:8px 12px;
+    border-right:1px solid var(--color-line);
+  }
+  table.slot-table thead th{
+    position:sticky;top:0;
+    background:var(--color-surface);
+    z-index:3;
+    padding:10px 10px 8px;
+    font-weight:500;
+  }
+  table.slot-table thead th.time-col{z-index:4;}
+  th.date-col .dow{
+    display:block;
+    font-size:10.5px;
+    letter-spacing:.05em;
+    color:var(--color-ink-soft);
+    margin-bottom:2px;
+  }
+  th.date-col .dnum{
+    display:block;
+    font-family:'Shippori Mincho',serif;
+    font-size:16px;
+  }
+  th.date-col.sat .dow, th.date-col.sat .dnum{color:var(--color-sat);}
+  th.date-col.sun .dow, th.date-col.sun .dnum{color:var(--color-sun);}
+
+  td.slot{
+    width:46px;height:38px;
+    cursor:pointer;
+    position:relative;
+    transition:background .12s;
+  }
+  td.slot:hover{background:#F3F0E8;}
+  td.slot.selected{background:var(--color-seal-soft2);}
+  td.slot .stamp{
+    opacity:0;
+    transform:scale(.4);
+    transition:opacity .16s, transform .16s;
+    background:var(--color-seal);
+    border-radius:50%;
+    width:24px;height:24px;
+    display:flex;align-items:center;justify-content:center;
+    margin:0 auto;
+    box-shadow:0 1px 2px rgba(178,58,46,0.35);
+  }
+  td.slot .stamp svg{width:13px;height:13px;}
+  td.slot.selected .stamp{opacity:1; transform:scale(1);}
+  td.slot.selected{background:var(--color-seal-soft2); box-shadow:inset 0 0 0 1.5px var(--color-seal);}
+
+  /* ---------- Selected chips ---------- */
+  .selected-list{
+    margin-top:20px;
+  }
+  .selected-list h3{
+    font-size:12.5px;
+    font-weight:500;
+    color:var(--color-ink-soft);
+    margin:0 0 10px;
+    letter-spacing:.03em;
+  }
+  .chips{
+    display:flex;flex-wrap:wrap;gap:8px;
+    min-height:32px;
+  }
+  .chip{
+    display:flex;align-items:center;gap:6px;
+    background:var(--color-seal-soft);
+    border:1px solid var(--color-seal-soft2);
+    color:var(--color-seal);
+    font-size:12.5px;
+    padding:5px 8px 5px 10px;
+    border-radius:16px;
+  }
+  .chip button{
+    border:none;background:none;cursor:pointer;
+    color:var(--color-seal);
+    font-size:13px;line-height:1;
+    padding:2px;
+  }
+  .empty-note{font-size:12.5px;color:var(--color-ink-soft);font-style:italic;}
+
+  /* ---------- Submit ---------- */
+  .submit-row{
+    display:flex;justify-content:flex-end;
+    margin-top:8px;
+  }
+  button.primary{
+    font-family:'Noto Sans JP',sans-serif;
+    font-size:14.5px;
+    font-weight:500;
+    color:#fff;
+    background:var(--color-ink);
+    border:none;
+    padding:13px 26px;
+    border-radius:var(--radius-s);
+    cursor:pointer;
+    letter-spacing:.03em;
+    transition:background .15s, transform .1s;
+  }
+  button.primary:hover{background:#2A3346;}
+  button.primary:active{transform:scale(.98);}
+  .error-msg{
+    color:var(--color-seal);
+    font-size:12.5px;
+    margin-top:10px;
+    text-align:right;
+    display:none;
+  }
+
+  /* ---------- Confirmation ---------- */
+  #confirm{
+    display:none;
+  }
+  .confirm-card{
+    background:var(--color-surface);
+    border:1px solid var(--color-line);
+    border-radius:var(--radius-m);
+    padding:32px 28px;
+    position:relative;
+    overflow:hidden;
+  }
+  .confirm-card::before{
+    content:"";
+    position:absolute;top:0;left:0;right:0;height:4px;
+    background:var(--color-seal);
+  }
+  .confirm-head{
+    display:flex;align-items:center;gap:16px;
+    margin-bottom:22px;
+  }
+  .confirm-stamp{
+    width:52px;height:52px;flex-shrink:0;
+    border:2px solid var(--color-seal);
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    color:var(--color-seal);
+    font-family:'Shippori Mincho',serif;
+    font-weight:800;font-size:15px;
+    transform:rotate(-6deg);
+    animation:stampIn .35s cubic-bezier(.2,1.4,.4,1) both;
+  }
+  @keyframes stampIn{
+    from{opacity:0; transform:scale(2) rotate(-6deg);}
+    to{opacity:1; transform:scale(1) rotate(-6deg);}
+  }
+  .confirm-head h2{
+    font-family:'Shippori Mincho',serif;
+    font-size:20px;margin:0 0 4px;
+  }
+  .confirm-head p{margin:0;font-size:13px;color:var(--color-ink-soft);}
+  .confirm-table{width:100%;border-collapse:collapse;margin-bottom:22px;}
+  .confirm-table tr{border-bottom:1px solid var(--color-line);}
+  .confirm-table tr:last-child{border-bottom:none;}
+  .confirm-table th{
+    text-align:left;
+    font-weight:500;
+    font-size:12.5px;
+    color:var(--color-ink-soft);
+    padding:12px 14px 12px 0;
+    vertical-align:top;
+    width:120px;
+    white-space:nowrap;
+  }
+  .confirm-table td{
+    padding:12px 0;
+    font-size:14.5px;
+  }
+  .confirm-table .cchips{display:flex;flex-wrap:wrap;gap:6px;}
+  .confirm-table .cchip{
+    background:var(--color-seal-soft);
+    color:var(--color-seal);
+    font-size:12.5px;
+    padding:4px 9px;border-radius:12px;
+  }
+  .confirm-actions{display:flex;gap:10px;flex-wrap:wrap;}
+  button.secondary{
+    font-family:'Noto Sans JP',sans-serif;
+    font-size:13.5px;
+    color:var(--color-ink);
+    background:#fff;
+    border:1px solid var(--color-line);
+    padding:10px 18px;
+    border-radius:var(--radius-s);
+    cursor:pointer;
+  }
+  button.secondary:hover{border-color:var(--color-gold);}
+  .copy-note{
+    font-size:12px;color:var(--color-success);
+    margin-left:4px;
+    opacity:0;
+    transition:opacity .2s;
+  }
+  .copy-note.show{opacity:1;}
+
+  /* ---------- 確認モーダル ---------- */
+  .modal-overlay{
+    display:none;
+    position:fixed; inset:0;
+    background:rgba(28,35,51,0.45);
+    z-index:50;
+    align-items:center; justify-content:center;
+    padding:20px;
+  }
+  .modal-overlay.show{display:flex;}
+  .modal-box{
+    background:var(--color-surface);
+    border-radius:var(--radius-m);
+    max-width:460px; width:100%;
+    padding:26px 26px 22px;
+    position:relative;
+    overflow:hidden;
+    animation:modalIn .22s ease both;
+  }
+  .modal-box::before{
+    content:"";
+    position:absolute;top:0;left:0;right:0;height:4px;
+    background:var(--color-seal);
+  }
+  @keyframes modalIn{
+    from{opacity:0; transform:translateY(8px) scale(.98);}
+    to{opacity:1; transform:translateY(0) scale(1);}
+  }
+  .modal-box h3{
+    font-family:'Shippori Mincho',serif;
+    font-size:17px; margin:0 0 4px;
+  }
+  .modal-box .modal-sub{
+    font-size:12.5px; color:var(--color-ink-soft); margin:0 0 18px;
+  }
+  .modal-table{width:100%; border-collapse:collapse; margin-bottom:22px;}
+  .modal-table tr{border-bottom:1px solid var(--color-line);}
+  .modal-table tr:last-child{border-bottom:none;}
+  .modal-table th{
+    text-align:left; font-weight:500; font-size:12px;
+    color:var(--color-ink-soft);
+    padding:10px 12px 10px 0; vertical-align:top; width:90px; white-space:nowrap;
+  }
+  .modal-table td{padding:10px 0; font-size:13.5px;}
+  .modal-table .mchips{display:flex; flex-wrap:wrap; gap:5px;}
+  .modal-table .mchip{
+    background:var(--color-seal-soft); color:var(--color-seal);
+    font-size:11.5px; padding:3px 8px; border-radius:11px;
+  }
+  .modal-actions{display:flex; gap:10px; justify-content:flex-end;}
+</style>
+</head>
+<body class="paper-texture">
+<div class="page">
+
+  <header class="hero">
+    <div class="hero-text">
+      <div class="eyebrow">INTERVIEW SCHEDULING</div>
+      <h1>面談日程調整シート</h1>
+      <p>お名前・ご連絡先・ご希望の面談形式と、面談が可能な日時をご記入のうえ送信してください。複数の候補日時を選択いただけます。</p>
+    </div>
+    <svg class="seal" viewBox="0 0 74 74" fill="none">
+      <circle cx="37" cy="37" r="34" stroke="#B23A2E" stroke-width="2.5"/>
+      <rect x="21" y="24" width="32" height="27" rx="2.5" stroke="#B23A2E" stroke-width="2.2"/>
+      <path d="M21 32h32" stroke="#B23A2E" stroke-width="2.2"/>
+      <path d="M28 20v8M46 20v8" stroke="#B23A2E" stroke-width="2.2" stroke-linecap="round"/>
+      <path d="M28.5 41.5l4.5 4.5 9-9" stroke="#B23A2E" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </svg>
+  </header>
+
+  <form id="scheduleForm">
+
+    <!-- 1. 基本情報 -->
+    <section class="card">
+      <div class="section-head">
+        <span class="section-num">01</span>
+        <h2>基本情報</h2>
+      </div>
+      <div class="field-row">
+        <label class="field">
+          <span class="req">お名前</span>
+          <input type="text" id="name" name="name" placeholder="例）山田 太郎" required>
+        </label>
+        <label class="field">
+          <span class="req">連絡先（メール または 電話）</span>
+          <input type="text" id="contact" name="contact" placeholder="例）taro.yamada@example.com" required>
+        </label>
+      </div>
+    </section>
+
+    <!-- 2. 面談形式 -->
+    <section class="card">
+      <div class="section-head">
+        <span class="section-num">02</span>
+        <h2>面談形式</h2>
+      </div>
+      <div class="format-options" id="formatOptions">
+        <div class="format-card" data-value="google_meet" tabindex="0" role="radio" aria-checked="false">
+          <span class="check"></span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+            <rect x="2" y="6" width="14" height="12" rx="2"/>
+            <path d="M16 9.5 22 6v12l-6-3.5"/>
+          </svg>
+          <div>
+            <div class="fc-title">Google Meet</div>
+            <div class="fc-sub">オンラインで実施</div>
+          </div>
+        </div>
+        <div class="format-card" data-value="in_person" tabindex="0" role="radio" aria-checked="false">
+          <span class="check"></span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+            <path d="M4 21V8l8-5 8 5v13"/>
+            <path d="M9 21v-6h6v6"/>
+            <path d="M9 11h.01M15 11h.01M9 15h.01M15 15h.01"/>
+          </svg>
+          <div>
+            <div class="fc-title">対面</div>
+            <div class="fc-sub">オフィスにて実施</div>
+          </div>
+        </div>
+      </div>
+      <input type="hidden" id="format" name="format" required>
+    </section>
+
+    <!-- 3. 面談可能日時 -->
+    <section class="card">
+      <div class="section-head">
+        <span class="section-num">03</span>
+        <h2>面談可能日時</h2>
+      </div>
+      <p class="grid-hint">セルをクリックして候補の日時を選択してください（複数選択可）。表は横にスクロールできます。</p>
+      <div class="grid-scroll">
+        <table class="slot-table" id="slotTable"></table>
+      </div>
+      <div class="selected-list">
+        <h3>選択中の候補日時</h3>
+        <div class="chips" id="chips">
+          <span class="empty-note">まだ選択されていません</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="submit-row">
+      <button type="submit" class="primary">内容を確定する</button>
+    </div>
+    <div class="error-msg" id="errorMsg">未入力の項目、または未選択の候補日時があります。</div>
+  </form>
+
+  <!-- 確認画面 -->
+  <section id="confirm" class="card confirm-card">
+    <div class="confirm-head">
+      <div class="confirm-stamp">確認<br></div>
+      <div>
+        <h2>内容を確認しました</h2>
+        <p>下記の内容で面談日程の候補をお送りください。</p>
+      </div>
+    </div>
+    <table class="confirm-table">
+      <tr><th>お名前</th><td id="cName"></td></tr>
+      <tr><th>連絡先</th><td id="cContact"></td></tr>
+      <tr><th>面談形式</th><td id="cFormat"></td></tr>
+      <tr><th>候補日時</th><td><div class="cchips" id="cSlots"></div></td></tr>
+    </table>
+    <div class="confirm-actions">
+      <button type="button" class="secondary" id="copyBtn">内容をコピーする<span class="copy-note" id="copyNote">コピーしました</span></button>
+      <button type="button" class="secondary" id="backBtn">編集に戻る</button>
+    </div>
+  </section>
+
+  <!-- 確認モーダル -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-box">
+      <h3>この内容で確定しますか？</h3>
+      <p class="modal-sub">送信前に、入力内容をもう一度ご確認ください。</p>
+      <table class="modal-table">
+        <tr><th>お名前</th><td id="mName"></td></tr>
+        <tr><th>連絡先</th><td id="mContact"></td></tr>
+        <tr><th>面談形式</th><td id="mFormat"></td></tr>
+        <tr><th>候補日時</th><td><div class="mchips" id="mSlots"></div></td></tr>
+      </table>
+      <div class="modal-actions">
+        <button type="button" class="secondary" id="modalCancel">修正する</button>
+        <button type="button" class="primary" id="modalOk">この内容で確定する</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  // ---------- カレンダー生成 ----------
+  const DAYS = 14;
+  const START_HOUR = 9;
+  const END_HOUR = 19; // exclusive end of last slot start (19:00 開始が最後)
+  const dow = ['日','月','火','水','木','金','土'];
+  const dates = [];
+  const today = new Date();
+  for(let i=1; i<=DAYS; i++){
+    const d = new Date(today);
+    d.setDate(today.getDate()+i);
+    dates.push(d);
+  }
+  const times = [];
+  for(let h=START_HOUR; h<=END_HOUR; h++){
+    times.push(h);
+  }
+
+  const table = document.getElementById('slotTable');
+  const thead = document.createElement('thead');
+  const headRow = document.createElement('tr');
+  const corner = document.createElement('th');
+  corner.className = 'time-col';
+  corner.textContent = '時間';
+  headRow.appendChild(corner);
+  dates.forEach(d=>{
+    const th = document.createElement('th');
+    const day = d.getDay();
+    th.className = 'date-col' + (day===0?' sun':day===6?' sat':'');
+    th.innerHTML = `<span class="dow">${dow[day]}</span><span class="dnum">${d.getMonth()+1}/${d.getDate()}</span>`;
+    headRow.appendChild(th);
+  });
+  thead.appendChild(headRow);
+  table.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  const selected = new Set(); // key: "YYYY-MM-DD_HH"
+
+  function pad(n){return n.toString().padStart(2,'0');}
+  function keyOf(d,h){return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(h)}`;}
+  function labelOf(d,h){
+    const day = d.getDay();
+    return `${d.getMonth()+1}/${d.getDate()}(${dow[day]}) ${pad(h)}:00`;
+  }
+
+  times.forEach(h=>{
+    const tr = document.createElement('tr');
+    const timeTd = document.createElement('td');
+    timeTd.className = 'time-col';
+    timeTd.textContent = `${pad(h)}:00`;
+    tr.appendChild(timeTd);
+    dates.forEach(d=>{
+      const td = document.createElement('td');
+      td.className = 'slot';
+      const k = keyOf(d,h);
+      td.dataset.key = k;
+      td.dataset.label = labelOf(d,h);
+      const stamp = document.createElement('span');
+      stamp.className = 'stamp';
+      stamp.innerHTML = '<svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 4.5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      td.appendChild(stamp);
+      td.addEventListener('click', ()=>toggleSlot(td));
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+
+  const chipsEl = document.getElementById('chips');
+
+  function toggleSlot(td){
+    const k = td.dataset.key;
+    if(selected.has(k)){
+      selected.delete(k);
+      td.classList.remove('selected');
+    } else {
+      selected.add(k);
+      td.classList.add('selected');
+    }
+    renderChips();
+  }
+
+  function renderChips(){
+    chipsEl.innerHTML = '';
+    if(selected.size===0){
+      chipsEl.innerHTML = '<span class="empty-note">まだ選択されていません</span>';
+      return;
+    }
+    // sort by key (chronological since keys are zero-padded)
+    const sortedKeys = Array.from(selected).sort();
+    sortedKeys.forEach(k=>{
+      const td = table.querySelector(`td[data-key="${k}"]`);
+      const chip = document.createElement('span');
+      chip.className = 'chip';
+      chip.innerHTML = `${td.dataset.label} <button type="button" aria-label="削除">&times;</button>`;
+      chip.querySelector('button').addEventListener('click', ()=>toggleSlot(td));
+      chipsEl.appendChild(chip);
+    });
+  }
+
+  // ---------- 面談形式 ----------
+  const formatOptions = document.getElementById('formatOptions');
+  const formatInput = document.getElementById('format');
+  formatOptions.querySelectorAll('.format-card').forEach(card=>{
+    card.addEventListener('click', ()=>selectFormat(card));
+    card.addEventListener('keydown', e=>{
+      if(e.key==='Enter' || e.key===' '){ e.preventDefault(); selectFormat(card); }
+    });
+  });
+  function selectFormat(card){
+    formatOptions.querySelectorAll('.format-card').forEach(c=>{
+      c.classList.remove('selected');
+      c.setAttribute('aria-checked','false');
+    });
+    card.classList.add('selected');
+    card.setAttribute('aria-checked','true');
+    formatInput.value = card.dataset.value;
+  }
+
+  // ---------- 送信 / 確認画面 ----------
+  const form = document.getElementById('scheduleForm');
+  const errorMsg = document.getElementById('errorMsg');
+  const confirmSection = document.getElementById('confirm');
+
+  const modalOverlay = document.getElementById('modalOverlay');
+
+  function buildSlotChips(container){
+    container.innerHTML = '';
+    Array.from(selected).sort().forEach(k=>{
+      const td = table.querySelector(`td[data-key="${k}"]`);
+      const c = document.createElement('span');
+      c.className = container.id==='mSlots' ? 'mchip' : 'cchip';
+      c.textContent = td.dataset.label;
+      container.appendChild(c);
+    });
+  }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    const name = document.getElementById('name').value.trim();
+    const contact = document.getElementById('contact').value.trim();
+    const format = formatInput.value;
+
+    if(!name || !contact || !format || selected.size===0){
+      errorMsg.style.display = 'block';
+      return;
+    }
+    errorMsg.style.display = 'none';
+
+    const formatLabel = format==='google_meet' ? 'Google Meet（オンライン）' : '対面';
+
+    // まず確認モーダルに内容を表示
+    document.getElementById('mName').textContent = name;
+    document.getElementById('mContact').textContent = contact;
+    document.getElementById('mFormat').textContent = formatLabel;
+    buildSlotChips(document.getElementById('mSlots'));
+
+    modalOverlay.classList.add('show');
+  });
+
+  document.getElementById('modalCancel').addEventListener('click', ()=>{
+    modalOverlay.classList.remove('show');
+  });
+
+  document.getElementById('modalOk').addEventListener('click', ()=>{
+    modalOverlay.classList.remove('show');
+
+    document.getElementById('cName').textContent = document.getElementById('mName').textContent;
+    document.getElementById('cContact').textContent = document.getElementById('mContact').textContent;
+    document.getElementById('cFormat').textContent = document.getElementById('mFormat').textContent;
+    buildSlotChips(document.getElementById('cSlots'));
+
+    form.style.display = 'none';
+    confirmSection.style.display = 'block';
+    confirmSection.scrollIntoView({behavior:'smooth', block:'start'});
+  });
+
+  document.getElementById('backBtn').addEventListener('click', ()=>{
+    confirmSection.style.display = 'none';
+    form.style.display = 'block';
+    form.scrollIntoView({behavior:'smooth', block:'start'});
+  });
+
+  document.getElementById('copyBtn').addEventListener('click', ()=>{
+    const name = document.getElementById('cName').textContent;
+    const contact = document.getElementById('cContact').textContent;
+    const format = document.getElementById('cFormat').textContent;
+    const slots = Array.from(document.getElementById('cSlots').children).map(c=>'・'+c.textContent).join('\n');
+    const text = `【面談日程調整】\nお名前：${name}\n連絡先：${contact}\n面談形式：${format}\n候補日時：\n${slots}`;
+    navigator.clipboard.writeText(text).then(()=>{
+      const note = document.getElementById('copyNote');
+      note.classList.add('show');
+      setTimeout(()=>note.classList.remove('show'), 1800);
+    });
+  });
+
+})();
+</script>
+</body>
+</html>
