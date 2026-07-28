@@ -20,6 +20,8 @@
     --color-success:#3D7A5C;
     --color-sat:#2C5C8A;
     --color-sun:#B23A2E;
+    --color-ng:#8A8F9C;
+    --color-ng-bg:#ECEAE4;
     --radius-s:4px;
     --radius-m:8px;
   }
@@ -34,565 +36,373 @@
     -webkit-font-smoothing:antialiased;
   }
   .paper-texture{
-    background-image:
-      radial-gradient(circle at 1px 1px, rgba(28,35,51,0.035) 1px, transparent 0);
+    background-image:radial-gradient(circle at 1px 1px, rgba(28,35,51,0.035) 1px, transparent 0);
     background-size:14px 14px;
   }
-  .page{
-    max-width:920px;
-    margin:0 auto;
-    padding:48px 20px 100px;
-  }
+  .page{max-width:920px; margin:0 auto; padding:48px 20px 100px;}
+
   /* ---------- Header ---------- */
   header.hero{
-    display:flex;
-    align-items:flex-start;
-    justify-content:space-between;
-    gap:24px;
-    padding-bottom:28px;
-    margin-bottom:36px;
+    display:flex; align-items:flex-start; justify-content:space-between; gap:24px;
+    padding-bottom:28px; margin-bottom:36px;
     border-bottom:1px solid var(--color-line);
-    opacity:0;
-    animation:fadeUp .7s ease forwards;
+    opacity:0; animation:fadeUp .7s ease forwards;
   }
-  .hero-text .eyebrow{
-    font-size:12px;
-    letter-spacing:.18em;
-    color:var(--color-gold);
-    font-weight:500;
-    margin-bottom:10px;
-  }
-  .hero-text h1{
-    font-family:'Shippori Mincho',serif;
-    font-weight:800;
-    font-size:clamp(26px,4vw,38px);
-    margin:0 0 10px;
-    letter-spacing:.02em;
-  }
-  .hero-text p{
-    margin:0;
-    color:var(--color-ink-soft);
-    font-size:14px;
-    max-width:46ch;
-  }
-  .seal{
-    flex-shrink:0;
-    width:74px;height:74px;
-  }
-  @keyframes fadeUp{
-    from{opacity:0; transform:translateY(10px);}
-    to{opacity:1; transform:translateY(0);}
-  }
+  .hero-text .eyebrow{font-size:12px; letter-spacing:.18em; color:var(--color-gold); font-weight:500; margin-bottom:10px;}
+  .hero-text h1{font-family:'Shippori Mincho',serif; font-weight:800; font-size:clamp(24px,4vw,36px); margin:0 0 10px; letter-spacing:.02em;}
+  .hero-text p{margin:0; color:var(--color-ink-soft); font-size:14px; max-width:50ch;}
+  .seal{flex-shrink:0; width:70px; height:70px;}
+  @keyframes fadeUp{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
 
-  /* ---------- Sections ---------- */
+  .mode-badge{
+    display:inline-flex; align-items:center; gap:6px;
+    font-size:11.5px; letter-spacing:.06em; color:var(--color-gold);
+    border:1px solid var(--color-gold); border-radius:20px; padding:4px 12px;
+    margin-bottom:14px;
+  }
+  .mode-badge.respondent{color:var(--color-seal); border-color:var(--color-seal);}
+
+  /* ---------- Cards / sections ---------- */
   section.card{
-    background:var(--color-surface);
-    border:1px solid var(--color-line);
-    border-radius:var(--radius-m);
-    padding:28px 26px;
-    margin-bottom:24px;
-    opacity:0;
-    animation:fadeUp .6s ease forwards;
+    background:var(--color-surface); border:1px solid var(--color-line); border-radius:var(--radius-m);
+    padding:28px 26px; margin-bottom:24px;
+    opacity:0; animation:fadeUp .6s ease forwards;
   }
   section.card:nth-of-type(1){animation-delay:.05s;}
   section.card:nth-of-type(2){animation-delay:.12s;}
   section.card:nth-of-type(3){animation-delay:.19s;}
-
-  .section-head{
-    display:flex;
-    align-items:baseline;
-    gap:10px;
-    margin-bottom:20px;
-  }
-  .section-num{
-    font-family:'Shippori Mincho',serif;
-    font-size:13px;
-    color:var(--color-gold);
-    letter-spacing:.1em;
-  }
-  .section-head h2{
-    font-family:'Shippori Mincho',serif;
-    font-size:19px;
-    font-weight:600;
-    margin:0;
-  }
+  .section-head{display:flex; align-items:baseline; gap:10px; margin-bottom:20px;}
+  .section-num{font-family:'Shippori Mincho',serif; font-size:13px; color:var(--color-gold); letter-spacing:.1em;}
+  .section-head h2{font-family:'Shippori Mincho',serif; font-size:19px; font-weight:600; margin:0;}
+  .section-note{font-size:12.5px; color:var(--color-ink-soft); margin:-12px 0 18px;}
 
   /* ---------- Form fields ---------- */
-  .field-row{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:18px;
-  }
-  @media (max-width:600px){
-    .field-row{grid-template-columns:1fr;}
-  }
-  label.field{
-    display:flex;
-    flex-direction:column;
-    gap:6px;
-    font-size:13px;
-    color:var(--color-ink-soft);
-  }
+  .field-row{display:grid; grid-template-columns:1fr 1fr; gap:18px;}
+  @media (max-width:600px){.field-row{grid-template-columns:1fr;}}
+  label.field{display:flex; flex-direction:column; gap:6px; font-size:13px; color:var(--color-ink-soft);}
   label.field span.req::after{
-    content:"必須";
-    font-size:10px;
-    color:var(--color-seal);
-    border:1px solid var(--color-seal);
-    padding:1px 5px;
-    border-radius:3px;
-    margin-left:8px;
-    letter-spacing:.05em;
+    content:"必須"; font-size:10px; color:var(--color-seal); border:1px solid var(--color-seal);
+    padding:1px 5px; border-radius:3px; margin-left:8px; letter-spacing:.05em;
   }
   input[type=text], input[type=email], input[type=tel]{
-    font-family:'Noto Sans JP',sans-serif;
-    font-size:15px;
-    color:var(--color-ink);
-    padding:11px 12px;
-    border:1px solid var(--color-line);
-    border-radius:var(--radius-s);
-    background:#FCFBF8;
-    outline:none;
-    transition:border-color .15s, box-shadow .15s;
+    font-family:'Noto Sans JP',sans-serif; font-size:15px; color:var(--color-ink);
+    padding:11px 12px; border:1px solid var(--color-line); border-radius:var(--radius-s);
+    background:#FCFBF8; outline:none; transition:border-color .15s, box-shadow .15s; width:100%;
   }
-  input:focus-visible{
-    border-color:var(--color-seal);
-    box-shadow:0 0 0 3px var(--color-seal-soft);
-  }
+  input:focus-visible{border-color:var(--color-seal); box-shadow:0 0 0 3px var(--color-seal-soft);}
+  input[readonly]{background:#F3F1EA; color:var(--color-ink-soft);}
 
   /* ---------- Format cards ---------- */
-  .format-options{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:14px;
-  }
-  @media (max-width:600px){
-    .format-options{grid-template-columns:1fr;}
-  }
+  .format-options{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  @media (max-width:600px){.format-options{grid-template-columns:1fr;}}
   .format-card{
-    position:relative;
-    border:1px solid var(--color-line);
-    border-radius:var(--radius-m);
-    padding:18px 16px;
-    cursor:pointer;
-    display:flex;
-    align-items:center;
-    gap:14px;
-    background:#FCFBF8;
-    transition:border-color .15s, background .15s;
+    position:relative; border:1px solid var(--color-line); border-radius:var(--radius-m);
+    padding:18px 16px; cursor:pointer; display:flex; align-items:center; gap:14px;
+    background:#FCFBF8; transition:border-color .15s, background .15s;
   }
   .format-card:hover{border-color:var(--color-gold);}
-  .format-card.selected{
-    border-color:var(--color-seal);
-    background:var(--color-seal-soft);
-  }
-  .format-card svg{flex-shrink:0;width:30px;height:30px;color:var(--color-ink-soft);}
+  .format-card.selected{border-color:var(--color-seal); background:var(--color-seal-soft);}
+  .format-card svg{flex-shrink:0; width:30px; height:30px; color:var(--color-ink-soft);}
   .format-card.selected svg{color:var(--color-seal);}
-  .format-card .fc-title{font-weight:500;font-size:15px;}
-  .format-card .fc-sub{font-size:12px;color:var(--color-ink-soft);margin-top:2px;}
-  .format-card .check{
-    position:absolute;top:12px;right:12px;
-    width:16px;height:16px;border-radius:50%;
-    border:1.5px solid var(--color-line);
-  }
-  .format-card.selected .check{
-    border-color:var(--color-seal);
-    background:var(--color-seal);
-    box-shadow:inset 0 0 0 3px #fff;
-  }
+  .format-card .fc-title{font-weight:500; font-size:15px;}
+  .format-card .fc-sub{font-size:12px; color:var(--color-ink-soft); margin-top:2px;}
+  .format-card .check{position:absolute; top:12px; right:12px; width:16px; height:16px; border-radius:50%; border:1.5px solid var(--color-line);}
+  .format-card.selected .check{border-color:var(--color-seal); background:var(--color-seal); box-shadow:inset 0 0 0 3px #fff;}
 
-  /* ---------- Calendar grid ---------- */
-  .grid-hint{
-    font-size:12.5px;
-    color:var(--color-ink-soft);
-    margin-bottom:14px;
-  }
-  .grid-scroll{
-    overflow-x:auto;
-    border:1px solid var(--color-line);
-    border-radius:var(--radius-m);
-    -webkit-overflow-scrolling:touch;
-  }
-  table.slot-table{
-    border-collapse:separate;
-    border-spacing:0;
-    width:100%;
-  }
+  /* ---------- Calendar grid (shared) ---------- */
+  .grid-hint{font-size:12.5px; color:var(--color-ink-soft); margin-bottom:14px;}
+  .legend{display:flex; gap:18px; flex-wrap:wrap; margin-bottom:14px; font-size:12px; color:var(--color-ink-soft);}
+  .legend span{display:inline-flex; align-items:center; gap:6px;}
+  .legend i{width:16px; height:16px; border-radius:3px; display:inline-block; border:1px solid var(--color-line);}
+  .legend i.open{background:#FCFBF8;}
+  .legend i.ng{background:var(--color-ng-bg); position:relative;}
+  .legend i.picked{background:var(--color-seal-soft2); box-shadow:inset 0 0 0 1.5px var(--color-seal);}
+
+  .grid-scroll{overflow-x:auto; border:1px solid var(--color-line); border-radius:var(--radius-m); -webkit-overflow-scrolling:touch;}
+  table.slot-table{border-collapse:separate; border-spacing:0; width:100%;}
   table.slot-table th, table.slot-table td{
-    border-bottom:1px solid var(--color-line);
-    border-right:1px solid var(--color-line);
-    text-align:center;
-    white-space:nowrap;
+    border-bottom:1px solid var(--color-line); border-right:1px solid var(--color-line);
+    text-align:center; white-space:nowrap;
   }
   table.slot-table th.time-col, table.slot-table td.time-col{
-    position:sticky;left:0;
-    background:var(--color-surface);
-    z-index:2;
-    font-size:12px;
-    color:var(--color-ink-soft);
-    padding:8px 12px;
-    border-right:1px solid var(--color-line);
+    position:sticky; left:0; background:var(--color-surface); z-index:2;
+    font-size:12px; color:var(--color-ink-soft); padding:8px 12px; border-right:1px solid var(--color-line);
   }
-  table.slot-table thead th{
-    position:sticky;top:0;
-    background:var(--color-surface);
-    z-index:3;
-    padding:10px 10px 8px;
-    font-weight:500;
-  }
+  table.slot-table thead th{position:sticky; top:0; background:var(--color-surface); z-index:3; padding:10px 10px 8px; font-weight:500;}
   table.slot-table thead th.time-col{z-index:4;}
-  th.date-col .dow{
-    display:block;
-    font-size:10.5px;
-    letter-spacing:.05em;
-    color:var(--color-ink-soft);
-    margin-bottom:2px;
-  }
-  th.date-col .dnum{
-    display:block;
-    font-family:'Shippori Mincho',serif;
-    font-size:16px;
-  }
+  th.date-col .dow{display:block; font-size:10.5px; letter-spacing:.05em; color:var(--color-ink-soft); margin-bottom:2px;}
+  th.date-col .dnum{display:block; font-family:'Shippori Mincho',serif; font-size:16px;}
   th.date-col.sat .dow, th.date-col.sat .dnum{color:var(--color-sat);}
   th.date-col.sun .dow, th.date-col.sun .dnum{color:var(--color-sun);}
 
-  td.slot{
-    width:46px;height:38px;
-    cursor:pointer;
-    position:relative;
-    transition:background .12s;
-  }
+  td.slot{width:46px; height:38px; cursor:pointer; position:relative; transition:background .12s;}
   td.slot:hover{background:#F3F0E8;}
-  td.slot.selected{background:var(--color-seal-soft2);}
-  td.slot .stamp{
-    opacity:0;
-    transform:scale(.4);
-    transition:opacity .16s, transform .16s;
-    background:var(--color-seal);
-    border-radius:50%;
-    width:24px;height:24px;
-    display:flex;align-items:center;justify-content:center;
-    margin:0 auto;
-    box-shadow:0 1px 2px rgba(178,58,46,0.35);
-  }
-  td.slot .stamp svg{width:13px;height:13px;}
-  td.slot.selected .stamp{opacity:1; transform:scale(1);}
   td.slot.selected{background:var(--color-seal-soft2); box-shadow:inset 0 0 0 1.5px var(--color-seal);}
+  td.slot .mark{
+    opacity:0; transform:scale(.4); transition:opacity .16s, transform .16s;
+    border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center;
+    margin:0 auto;
+  }
+  td.slot .mark svg{width:13px; height:13px;}
+  td.slot.selected .mark{opacity:1; transform:scale(1); background:var(--color-seal); box-shadow:0 1px 2px rgba(178,58,46,0.35);}
+
+  td.slot.ng{background:var(--color-ng-bg);}
+  td.slot.ng .mark{opacity:1; transform:scale(1); background:transparent;}
+  td.slot.ng .mark svg{width:15px; height:15px;}
+  td.slot.ng.locked{cursor:not-allowed;}
+  td.slot.ng.locked:hover{background:var(--color-ng-bg);}
 
   /* ---------- Selected chips ---------- */
-  .selected-list{
-    margin-top:20px;
-  }
-  .selected-list h3{
-    font-size:12.5px;
-    font-weight:500;
-    color:var(--color-ink-soft);
-    margin:0 0 10px;
-    letter-spacing:.03em;
-  }
-  .chips{
-    display:flex;flex-wrap:wrap;gap:8px;
-    min-height:32px;
-  }
-  .chip{
-    display:flex;align-items:center;gap:6px;
-    background:var(--color-seal-soft);
-    border:1px solid var(--color-seal-soft2);
-    color:var(--color-seal);
-    font-size:12.5px;
-    padding:5px 8px 5px 10px;
-    border-radius:16px;
-  }
-  .chip button{
-    border:none;background:none;cursor:pointer;
-    color:var(--color-seal);
-    font-size:13px;line-height:1;
-    padding:2px;
-  }
-  .empty-note{font-size:12.5px;color:var(--color-ink-soft);font-style:italic;}
+  .selected-list{margin-top:20px;}
+  .selected-list h3{font-size:12.5px; font-weight:500; color:var(--color-ink-soft); margin:0 0 10px; letter-spacing:.03em;}
+  .chips{display:flex; flex-wrap:wrap; gap:8px; min-height:32px;}
+  .chip{display:flex; align-items:center; gap:6px; background:var(--color-seal-soft); border:1px solid var(--color-seal-soft2); color:var(--color-seal); font-size:12.5px; padding:5px 8px 5px 10px; border-radius:16px;}
+  .chip button{border:none; background:none; cursor:pointer; color:var(--color-seal); font-size:13px; line-height:1; padding:2px;}
+  .empty-note{font-size:12.5px; color:var(--color-ink-soft); font-style:italic;}
 
-  /* ---------- Submit ---------- */
-  .submit-row{
-    display:flex;justify-content:flex-end;
-    margin-top:8px;
-  }
+  /* ---------- Buttons ---------- */
+  .submit-row{display:flex; justify-content:flex-end; gap:10px; margin-top:8px;}
   button.primary{
-    font-family:'Noto Sans JP',sans-serif;
-    font-size:14.5px;
-    font-weight:500;
-    color:#fff;
-    background:var(--color-ink);
-    border:none;
-    padding:13px 26px;
-    border-radius:var(--radius-s);
-    cursor:pointer;
-    letter-spacing:.03em;
-    transition:background .15s, transform .1s;
+    font-family:'Noto Sans JP',sans-serif; font-size:14.5px; font-weight:500; color:#fff;
+    background:var(--color-ink); border:none; padding:13px 26px; border-radius:var(--radius-s);
+    cursor:pointer; letter-spacing:.03em; transition:background .15s, transform .1s;
   }
   button.primary:hover{background:#2A3346;}
   button.primary:active{transform:scale(.98);}
-  .error-msg{
-    color:var(--color-seal);
-    font-size:12.5px;
-    margin-top:10px;
-    text-align:right;
-    display:none;
-  }
-
-  /* ---------- Confirmation ---------- */
-  #confirm{
-    display:none;
-  }
-  .confirm-card{
-    background:var(--color-surface);
-    border:1px solid var(--color-line);
-    border-radius:var(--radius-m);
-    padding:32px 28px;
-    position:relative;
-    overflow:hidden;
-  }
-  .confirm-card::before{
-    content:"";
-    position:absolute;top:0;left:0;right:0;height:4px;
-    background:var(--color-seal);
-  }
-  .confirm-head{
-    display:flex;align-items:center;gap:16px;
-    margin-bottom:22px;
-  }
-  .confirm-stamp{
-    width:52px;height:52px;flex-shrink:0;
-    border:2px solid var(--color-seal);
-    border-radius:50%;
-    display:flex;align-items:center;justify-content:center;
-    color:var(--color-seal);
-    font-family:'Shippori Mincho',serif;
-    font-weight:800;font-size:15px;
-    transform:rotate(-6deg);
-    animation:stampIn .35s cubic-bezier(.2,1.4,.4,1) both;
-  }
-  @keyframes stampIn{
-    from{opacity:0; transform:scale(2) rotate(-6deg);}
-    to{opacity:1; transform:scale(1) rotate(-6deg);}
-  }
-  .confirm-head h2{
-    font-family:'Shippori Mincho',serif;
-    font-size:20px;margin:0 0 4px;
-  }
-  .confirm-head p{margin:0;font-size:13px;color:var(--color-ink-soft);}
-  .confirm-table{width:100%;border-collapse:collapse;margin-bottom:22px;}
-  .confirm-table tr{border-bottom:1px solid var(--color-line);}
-  .confirm-table tr:last-child{border-bottom:none;}
-  .confirm-table th{
-    text-align:left;
-    font-weight:500;
-    font-size:12.5px;
-    color:var(--color-ink-soft);
-    padding:12px 14px 12px 0;
-    vertical-align:top;
-    width:120px;
-    white-space:nowrap;
-  }
-  .confirm-table td{
-    padding:12px 0;
-    font-size:14.5px;
-  }
-  .confirm-table .cchips{display:flex;flex-wrap:wrap;gap:6px;}
-  .confirm-table .cchip{
-    background:var(--color-seal-soft);
-    color:var(--color-seal);
-    font-size:12.5px;
-    padding:4px 9px;border-radius:12px;
-  }
-  .confirm-actions{display:flex;gap:10px;flex-wrap:wrap;}
   button.secondary{
-    font-family:'Noto Sans JP',sans-serif;
-    font-size:13.5px;
-    color:var(--color-ink);
-    background:#fff;
-    border:1px solid var(--color-line);
-    padding:10px 18px;
-    border-radius:var(--radius-s);
-    cursor:pointer;
+    font-family:'Noto Sans JP',sans-serif; font-size:13.5px; color:var(--color-ink); background:#fff;
+    border:1px solid var(--color-line); padding:10px 18px; border-radius:var(--radius-s); cursor:pointer;
   }
   button.secondary:hover{border-color:var(--color-gold);}
-  .copy-note{
-    font-size:12px;color:var(--color-success);
-    margin-left:4px;
-    opacity:0;
-    transition:opacity .2s;
+  .error-msg{color:var(--color-seal); font-size:12.5px; margin-top:10px; text-align:right; display:none;}
+
+  /* ---------- 回答一覧ダッシュボード ---------- */
+  .rank-row{display:flex; align-items:center; gap:12px; margin-bottom:10px;}
+  .rank-label{width:150px; flex-shrink:0; font-size:12.5px; color:var(--color-ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .rank-bar-bg{flex:1; background:var(--color-ng-bg); border-radius:4px; overflow:hidden; height:16px;}
+  .rank-bar-fill{background:var(--color-seal); height:100%; border-radius:4px; transition:width .5s ease;}
+  .rank-count{width:30px; flex-shrink:0; text-align:right; font-size:12px; color:var(--color-ink-soft);}
+
+  table.resp-list-table{width:100%; border-collapse:collapse; font-size:13px;}
+  table.resp-list-table th, table.resp-list-table td{
+    border-bottom:1px solid var(--color-line); padding:11px 14px; text-align:left; vertical-align:top;
   }
+  table.resp-list-table th{
+    font-weight:500; color:var(--color-ink-soft); font-size:11.5px; white-space:nowrap;
+    position:sticky; top:0; background:var(--color-surface);
+  }
+  table.resp-list-table td.ts{white-space:nowrap; color:var(--color-ink-soft); font-size:12.5px;}
+  table.resp-list-table .slot-chip{
+    display:inline-block; background:var(--color-seal-soft); color:var(--color-seal);
+    font-size:11px; padding:3px 8px; border-radius:10px; margin:2px 4px 2px 0; white-space:nowrap;
+  }
+
+  /* ---------- Link output ---------- */
+  .link-box{
+    display:flex; gap:8px; margin-top:16px; align-items:center; flex-wrap:wrap;
+  }
+  .link-box input{flex:1; min-width:220px;}
+  .copy-note{font-size:12px; color:var(--color-success); margin-left:4px; opacity:0; transition:opacity .2s;}
   .copy-note.show{opacity:1;}
 
-  /* ---------- 確認モーダル ---------- */
-  .modal-overlay{
-    display:none;
-    position:fixed; inset:0;
-    background:rgba(28,35,51,0.45);
-    z-index:50;
-    align-items:center; justify-content:center;
-    padding:20px;
+  /* ---------- Confirmation ---------- */
+  #confirm{display:none;}
+  .confirm-card{background:var(--color-surface); border:1px solid var(--color-line); border-radius:var(--radius-m); padding:32px 28px; position:relative; overflow:hidden;}
+  .confirm-card::before{content:""; position:absolute; top:0; left:0; right:0; height:4px; background:var(--color-seal);}
+  .confirm-head{display:flex; align-items:center; gap:16px; margin-bottom:22px;}
+  .confirm-stamp{
+    width:52px; height:52px; flex-shrink:0; border:2px solid var(--color-seal); border-radius:50%;
+    display:flex; align-items:center; justify-content:center; color:var(--color-seal);
+    font-family:'Shippori Mincho',serif; font-weight:800; font-size:14px; transform:rotate(-6deg);
+    animation:stampIn .35s cubic-bezier(.2,1.4,.4,1) both; text-align:center; line-height:1.2;
   }
+  @keyframes stampIn{ from{opacity:0; transform:scale(2) rotate(-6deg);} to{opacity:1; transform:scale(1) rotate(-6deg);} }
+  .confirm-head h2{font-family:'Shippori Mincho',serif; font-size:20px; margin:0 0 4px;}
+  .confirm-head p{margin:0; font-size:13px; color:var(--color-ink-soft);}
+  .confirm-table{width:100%; border-collapse:collapse; margin-bottom:22px;}
+  .confirm-table tr{border-bottom:1px solid var(--color-line);}
+  .confirm-table tr:last-child{border-bottom:none;}
+  .confirm-table th{text-align:left; font-weight:500; font-size:12.5px; color:var(--color-ink-soft); padding:12px 14px 12px 0; vertical-align:top; width:120px; white-space:nowrap;}
+  .confirm-table td{padding:12px 0; font-size:14.5px;}
+  .confirm-table .cchips{display:flex; flex-wrap:wrap; gap:6px;}
+  .confirm-table .cchip{background:var(--color-seal-soft); color:var(--color-seal); font-size:12.5px; padding:4px 9px; border-radius:12px;}
+  .confirm-actions{display:flex; gap:10px; flex-wrap:wrap;}
+
+  /* ---------- Modal (confirm-before-submit) ---------- */
+  .modal-overlay{display:none; position:fixed; inset:0; background:rgba(28,35,51,0.45); z-index:50; align-items:center; justify-content:center; padding:20px;}
   .modal-overlay.show{display:flex;}
-  .modal-box{
-    background:var(--color-surface);
-    border-radius:var(--radius-m);
-    max-width:460px; width:100%;
-    padding:26px 26px 22px;
-    position:relative;
-    overflow:hidden;
-    animation:modalIn .22s ease both;
-  }
-  .modal-box::before{
-    content:"";
-    position:absolute;top:0;left:0;right:0;height:4px;
-    background:var(--color-seal);
-  }
-  @keyframes modalIn{
-    from{opacity:0; transform:translateY(8px) scale(.98);}
-    to{opacity:1; transform:translateY(0) scale(1);}
-  }
-  .modal-box h3{
-    font-family:'Shippori Mincho',serif;
-    font-size:17px; margin:0 0 4px;
-  }
-  .modal-box .modal-sub{
-    font-size:12.5px; color:var(--color-ink-soft); margin:0 0 18px;
-  }
+  .modal-box{background:var(--color-surface); border-radius:var(--radius-m); max-width:460px; width:100%; padding:26px 26px 22px; position:relative; overflow:hidden; animation:modalIn .22s ease both;}
+  .modal-box::before{content:""; position:absolute; top:0; left:0; right:0; height:4px; background:var(--color-seal);}
+  @keyframes modalIn{ from{opacity:0; transform:translateY(8px) scale(.98);} to{opacity:1; transform:translateY(0) scale(1);} }
+  .modal-box h3{font-family:'Shippori Mincho',serif; font-size:17px; margin:0 0 4px;}
+  .modal-box .modal-sub{font-size:12.5px; color:var(--color-ink-soft); margin:0 0 18px;}
   .modal-table{width:100%; border-collapse:collapse; margin-bottom:22px;}
   .modal-table tr{border-bottom:1px solid var(--color-line);}
   .modal-table tr:last-child{border-bottom:none;}
-  .modal-table th{
-    text-align:left; font-weight:500; font-size:12px;
-    color:var(--color-ink-soft);
-    padding:10px 12px 10px 0; vertical-align:top; width:90px; white-space:nowrap;
-  }
+  .modal-table th{text-align:left; font-weight:500; font-size:12px; color:var(--color-ink-soft); padding:10px 12px 10px 0; vertical-align:top; width:90px; white-space:nowrap;}
   .modal-table td{padding:10px 0; font-size:13.5px;}
   .modal-table .mchips{display:flex; flex-wrap:wrap; gap:5px;}
-  .modal-table .mchip{
-    background:var(--color-seal-soft); color:var(--color-seal);
-    font-size:11.5px; padding:3px 8px; border-radius:11px;
-  }
+  .modal-table .mchip{background:var(--color-seal-soft); color:var(--color-seal); font-size:11.5px; padding:3px 8px; border-radius:11px;}
   .modal-actions{display:flex; gap:10px; justify-content:flex-end;}
 </style>
 </head>
 <body class="paper-texture">
 <div class="page">
 
-  <header class="hero">
-    <div class="hero-text">
-      <div class="eyebrow">INTERVIEW SCHEDULING</div>
-      <h1>面談日程調整シート</h1>
-      <p>お名前・ご連絡先・ご希望の面談形式と、面談が可能な日時をご記入のうえ送信してください。複数の候補日時を選択いただけます。</p>
-    </div>
-    <svg class="seal" viewBox="0 0 74 74" fill="none">
-      <circle cx="37" cy="37" r="34" stroke="#B23A2E" stroke-width="2.5"/>
-      <rect x="21" y="24" width="32" height="27" rx="2.5" stroke="#B23A2E" stroke-width="2.2"/>
-      <path d="M21 32h32" stroke="#B23A2E" stroke-width="2.2"/>
-      <path d="M28 20v8M46 20v8" stroke="#B23A2E" stroke-width="2.2" stroke-linecap="round"/>
-      <path d="M28.5 41.5l4.5 4.5 9-9" stroke="#B23A2E" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-    </svg>
-  </header>
-
-  <form id="scheduleForm">
-
-    <!-- 1. 基本情報 -->
-    <section class="card">
-      <div class="section-head">
-        <span class="section-num">01</span>
-        <h2>基本情報</h2>
+  <!-- ============ 管理者ビュー ============ -->
+  <div id="adminView">
+    <header class="hero">
+      <div class="hero-text">
+        <div class="mode-badge">ADMIN SETUP</div>
+        <h1>日程設定（管理者用）</h1>
+        <p>面談を受け付けたい日時をカレンダーから選んでください。クリックした箇所は「対応不可」として、回答者の画面に×印で表示され、選べなくなります。</p>
       </div>
-      <div class="field-row">
-        <label class="field">
-          <span class="req">お名前</span>
-          <input type="text" id="name" name="name" placeholder="例）山田 太郎" required>
-        </label>
-        <label class="field">
-          <span class="req">連絡先（メール または 電話）</span>
-          <input type="text" id="contact" name="contact" placeholder="例）taro.yamada@example.com" required>
-        </label>
+      <svg class="seal" viewBox="0 0 74 74" fill="none">
+        <circle cx="37" cy="37" r="34" stroke="#B23A2E" stroke-width="2.5"/>
+        <path d="M25 47V27l12-8 12 8v20" stroke="#B23A2E" stroke-width="2.2" stroke-linejoin="round"/>
+        <path d="M31 47v-9h12v9" stroke="#B23A2E" stroke-width="2.2"/>
+      </svg>
+    </header>
+
+    <section class="card">
+      <div class="section-head"><span class="section-num">01</span><h2>対応不可な日時を指定</h2></div>
+      <p class="grid-hint">セルをクリックすると「対応不可（×）」に切り替わります。もう一度クリックすると解除されます。</p>
+      <div class="legend">
+        <span><i class="open"></i>対応可能</span>
+        <span><i class="ng"></i>対応不可（×）</span>
+      </div>
+      <div class="grid-scroll"><table class="slot-table" id="adminTable"></table></div>
+    </section>
+
+    <section class="card">
+      <div class="section-head"><span class="section-num">02</span><h2>共有リンクを発行</h2></div>
+      <p class="grid-hint">下のボタンでリンクを発行すると、設定した対応不可の日時が反映された回答用ページのURLが作成されます。面談を受ける方にこのリンクを共有してください。</p>
+      <div class="submit-row" style="justify-content:flex-start;">
+        <button type="button" class="primary" id="genLinkBtn">共有リンクを発行する</button>
+        <button type="button" class="secondary" id="previewBtn">回答者側をプレビュー</button>
+      </div>
+      <div class="link-box" id="linkBox" style="display:none;">
+        <input type="text" id="linkOutput" readonly>
+        <button type="button" class="secondary" id="copyLinkBtn">コピーする<span class="copy-note" id="copyLinkNote">コピーしました</span></button>
       </div>
     </section>
 
-    <!-- 2. 面談形式 -->
     <section class="card">
-      <div class="section-head">
-        <span class="section-num">02</span>
-        <h2>面談形式</h2>
+      <div class="section-head"><span class="section-num">03</span><h2>回答一覧</h2></div>
+      <p class="grid-hint">Googleスプレッドシートに集まった回答を取得して表示します。</p>
+      <div class="submit-row" style="justify-content:flex-start;">
+        <button type="button" class="secondary" id="fetchResponsesBtn">回答を取得する</button>
       </div>
-      <div class="format-options" id="formatOptions">
-        <div class="format-card" data-value="google_meet" tabindex="0" role="radio" aria-checked="false">
-          <span class="check"></span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-            <rect x="2" y="6" width="14" height="12" rx="2"/>
-            <path d="M16 9.5 22 6v12l-6-3.5"/>
-          </svg>
-          <div>
-            <div class="fc-title">Google Meet</div>
-            <div class="fc-sub">オンラインで実施</div>
+      <p id="responsesStatus" style="font-size:12.5px; color:var(--color-ink-soft); margin-top:12px;"></p>
+
+      <div id="rankingBlock" style="margin-top:24px; display:none;">
+        <h3 style="font-family:'Shippori Mincho',serif; font-size:15px; font-weight:600; margin:0 0 14px;">人気の候補日時ランキング</h3>
+        <div id="rankingBars"></div>
+      </div>
+
+      <div id="responseTableBlock" style="margin-top:28px; display:none;">
+        <h3 style="font-family:'Shippori Mincho',serif; font-size:15px; font-weight:600; margin:0 0 14px;">回答一覧（新しい順）</h3>
+        <div class="grid-scroll">
+          <table class="resp-list-table" id="responseListTable"></table>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============ 回答者ビュー ============ -->
+  <div id="respondentView" style="display:none;">
+    <header class="hero">
+      <div class="hero-text">
+        <div class="mode-badge respondent">RESPONDENT</div>
+        <h1>面談日程調整シート</h1>
+        <p>お名前・ご連絡先・ご希望の面談形式と、面談が可能な日時をご記入のうえ送信してください。グレーの×印は対応不可の日時のため選択できません。</p>
+      </div>
+      <svg class="seal" viewBox="0 0 74 74" fill="none">
+        <circle cx="37" cy="37" r="34" stroke="#B23A2E" stroke-width="2.5"/>
+        <rect x="21" y="24" width="32" height="27" rx="2.5" stroke="#B23A2E" stroke-width="2.2"/>
+        <path d="M21 32h32" stroke="#B23A2E" stroke-width="2.2"/>
+        <path d="M28 20v8M46 20v8" stroke="#B23A2E" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M28.5 41.5l4.5 4.5 9-9" stroke="#B23A2E" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </svg>
+    </header>
+
+    <div id="previewNotice" style="display:none; margin-bottom:20px;">
+      <button type="button" class="secondary" id="backToAdminBtn">← 管理画面に戻る</button>
+    </div>
+
+    <form id="scheduleForm">
+      <section class="card">
+        <div class="section-head"><span class="section-num">01</span><h2>基本情報</h2></div>
+        <div class="field-row">
+          <label class="field"><span class="req">お名前</span>
+            <input type="text" id="name" name="name" placeholder="例）山田 太郎" required>
+          </label>
+          <label class="field"><span class="req">連絡先（メール または 電話）</span>
+            <input type="text" id="contact" name="contact" placeholder="例）taro.yamada@example.com" required>
+          </label>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-head"><span class="section-num">02</span><h2>面談形式</h2></div>
+        <div class="format-options" id="formatOptions">
+          <div class="format-card" data-value="google_meet" tabindex="0" role="radio" aria-checked="false">
+            <span class="check"></span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+              <rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 9.5 22 6v12l-6-3.5"/>
+            </svg>
+            <div><div class="fc-title">Google Meet</div><div class="fc-sub">オンラインで実施</div></div>
+          </div>
+          <div class="format-card" data-value="in_person" tabindex="0" role="radio" aria-checked="false">
+            <span class="check"></span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+              <path d="M4 21V8l8-5 8 5v13"/><path d="M9 21v-6h6v6"/><path d="M9 11h.01M15 11h.01M9 15h.01M15 15h.01"/>
+            </svg>
+            <div><div class="fc-title">対面</div><div class="fc-sub">オフィスにて実施</div></div>
           </div>
         </div>
-        <div class="format-card" data-value="in_person" tabindex="0" role="radio" aria-checked="false">
-          <span class="check"></span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-            <path d="M4 21V8l8-5 8 5v13"/>
-            <path d="M9 21v-6h6v6"/>
-            <path d="M9 11h.01M15 11h.01M9 15h.01M15 15h.01"/>
-          </svg>
-          <div>
-            <div class="fc-title">対面</div>
-            <div class="fc-sub">オフィスにて実施</div>
-          </div>
+        <input type="hidden" id="format" name="format" required>
+      </section>
+
+      <section class="card">
+        <div class="section-head"><span class="section-num">03</span><h2>面談可能日時</h2></div>
+        <p class="grid-hint">セルをクリックして候補の日時を選択してください（複数選択可）。グレーの×印は対応不可のため選択できません。</p>
+        <div class="legend">
+          <span><i class="open"></i>選択可能</span>
+          <span><i class="picked"></i>選択中</span>
+          <span><i class="ng"></i>対応不可（×）</span>
         </div>
-      </div>
-      <input type="hidden" id="format" name="format" required>
-    </section>
-
-    <!-- 3. 面談可能日時 -->
-    <section class="card">
-      <div class="section-head">
-        <span class="section-num">03</span>
-        <h2>面談可能日時</h2>
-      </div>
-      <p class="grid-hint">セルをクリックして候補の日時を選択してください（複数選択可）。表は横にスクロールできます。</p>
-      <div class="grid-scroll">
-        <table class="slot-table" id="slotTable"></table>
-      </div>
-      <div class="selected-list">
-        <h3>選択中の候補日時</h3>
-        <div class="chips" id="chips">
-          <span class="empty-note">まだ選択されていません</span>
+        <div class="grid-scroll"><table class="slot-table" id="respTable"></table></div>
+        <div class="selected-list">
+          <h3>選択中の候補日時</h3>
+          <div class="chips" id="chips"><span class="empty-note">まだ選択されていません</span></div>
         </div>
+      </section>
+
+      <div class="submit-row"><button type="submit" class="primary">内容を確定する</button></div>
+      <div class="error-msg" id="errorMsg">未入力の項目、または未選択の候補日時があります。</div>
+    </form>
+
+    <section id="confirm" class="card confirm-card">
+      <div class="confirm-head">
+        <div class="confirm-stamp">確認</div>
+        <div><h2>内容を確認しました</h2><p>下記の内容で面談日程の候補をお送りください。</p></div>
       </div>
+      <table class="confirm-table">
+        <tr><th>お名前</th><td id="cName"></td></tr>
+        <tr><th>連絡先</th><td id="cContact"></td></tr>
+        <tr><th>面談形式</th><td id="cFormat"></td></tr>
+        <tr><th>候補日時</th><td><div class="cchips" id="cSlots"></div></td></tr>
+      </table>
+      <div class="confirm-actions">
+        <button type="button" class="secondary" id="copyBtn">内容をコピーする<span class="copy-note" id="copyNote">コピーしました</span></button>
+        <button type="button" class="secondary" id="backBtn">編集に戻る</button>
+      </div>
+      <p id="sheetStatus" style="font-size:12.5px; margin-top:14px;"></p>
     </section>
+  </div>
 
-    <div class="submit-row">
-      <button type="submit" class="primary">内容を確定する</button>
-    </div>
-    <div class="error-msg" id="errorMsg">未入力の項目、または未選択の候補日時があります。</div>
-  </form>
-
-  <!-- 確認画面 -->
-  <section id="confirm" class="card confirm-card">
-    <div class="confirm-head">
-      <div class="confirm-stamp">確認<br></div>
-      <div>
-        <h2>内容を確認しました</h2>
-        <p>下記の内容で面談日程の候補をお送りください。</p>
-      </div>
-    </div>
-    <table class="confirm-table">
-      <tr><th>お名前</th><td id="cName"></td></tr>
-      <tr><th>連絡先</th><td id="cContact"></td></tr>
-      <tr><th>面談形式</th><td id="cFormat"></td></tr>
-      <tr><th>候補日時</th><td><div class="cchips" id="cSlots"></div></td></tr>
-    </table>
-    <div class="confirm-actions">
-      <button type="button" class="secondary" id="copyBtn">内容をコピーする<span class="copy-note" id="copyNote">コピーしました</span></button>
-      <button type="button" class="secondary" id="backBtn">編集に戻る</button>
-    </div>
-  </section>
-
-  <!-- 確認モーダル -->
+  <!-- ============ 送信前確認モーダル ============ -->
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal-box">
       <h3>この内容で確定しますか？</h3>
@@ -614,135 +424,300 @@
 
 <script>
 (function(){
-  // ---------- カレンダー生成 ----------
+  /* ▼▼▼ Googleスプレッドシート連携 ▼▼▼
+     Google Apps Scriptで発行した「ウェブアプリのURL」をここに貼り付けてください。
+     取得方法は返信メッセージの手順をご参照ください。 */
+  const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbx3gFO2cmD296tKyP7GVXPck3nbUAo-2fixKH5gUtK8bKq0RaaYoe_pnSB9qxsi5-0/exec";
+
+  function sendToSheet(data){
+    if(!WEBAPP_URL || WEBAPP_URL.indexOf('ここに') === 0){
+      return Promise.resolve({skipped:true});
+    }
+    return fetch(WEBAPP_URL, {
+      method:'POST',
+      mode:'no-cors', // GAS側のCORS設定不要にするため。応答内容は読み取れません。
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify(data)
+    }).then(()=>({sent:true})).catch(()=>({sent:false}));
+  }
+
   const DAYS = 14;
   const START_HOUR = 9;
-  const END_HOUR = 19; // exclusive end of last slot start (19:00 開始が最後)
+  const END_HOUR = 19;
   const dow = ['日','月','火','水','木','金','土'];
-  const dates = [];
-  const today = new Date();
-  for(let i=1; i<=DAYS; i++){
-    const d = new Date(today);
-    d.setDate(today.getDate()+i);
-    dates.push(d);
-  }
-  const times = [];
-  for(let h=START_HOUR; h<=END_HOUR; h++){
-    times.push(h);
-  }
-
-  const table = document.getElementById('slotTable');
-  const thead = document.createElement('thead');
-  const headRow = document.createElement('tr');
-  const corner = document.createElement('th');
-  corner.className = 'time-col';
-  corner.textContent = '時間';
-  headRow.appendChild(corner);
-  dates.forEach(d=>{
-    const th = document.createElement('th');
-    const day = d.getDay();
-    th.className = 'date-col' + (day===0?' sun':day===6?' sat':'');
-    th.innerHTML = `<span class="dow">${dow[day]}</span><span class="dnum">${d.getMonth()+1}/${d.getDate()}</span>`;
-    headRow.appendChild(th);
-  });
-  thead.appendChild(headRow);
-  table.appendChild(thead);
-
-  const tbody = document.createElement('tbody');
-  const selected = new Set(); // key: "YYYY-MM-DD_HH"
 
   function pad(n){return n.toString().padStart(2,'0');}
   function keyOf(d,h){return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(h)}`;}
-  function labelOf(d,h){
-    const day = d.getDay();
-    return `${d.getMonth()+1}/${d.getDate()}(${dow[day]}) ${pad(h)}:00`;
+  function labelOf(d,h){ return `${d.getMonth()+1}/${d.getDate()}(${dow[d.getDay()]}) ${pad(h)}:00`; }
+  function timesRange(){ const t=[]; for(let h=START_HOUR; h<=END_HOUR; h++) t.push(h); return t; }
+
+  function datesFrom(base){
+    const arr=[];
+    for(let i=0;i<DAYS;i++){ const d=new Date(base); d.setDate(base.getDate()+i); arr.push(d); }
+    return arr;
   }
 
-  times.forEach(h=>{
-    const tr = document.createElement('tr');
-    const timeTd = document.createElement('td');
-    timeTd.className = 'time-col';
-    timeTd.textContent = `${pad(h)}:00`;
-    tr.appendChild(timeTd);
+  const svgX = '<svg viewBox="0 0 16 16" fill="none"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9" stroke="#8A8F9C" stroke-width="2" stroke-linecap="round"/></svg>';
+  const svgCheck = '<svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 4.5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  /**
+   * 汎用カレンダー描画
+   * mode: 'admin'（クリックで対応不可を切替） / 'respondent'（対応不可は選べず、候補を選ぶ）
+   */
+  function renderTable(table, dates, times, ngSet, mode, onChange){
+    table.innerHTML = '';
+    const thead = document.createElement('thead');
+    const headRow = document.createElement('tr');
+    const corner = document.createElement('th');
+    corner.className = 'time-col'; corner.textContent = '時間';
+    headRow.appendChild(corner);
     dates.forEach(d=>{
-      const td = document.createElement('td');
-      td.className = 'slot';
-      const k = keyOf(d,h);
-      td.dataset.key = k;
-      td.dataset.label = labelOf(d,h);
-      const stamp = document.createElement('span');
-      stamp.className = 'stamp';
-      stamp.innerHTML = '<svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 4.5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-      td.appendChild(stamp);
-      td.addEventListener('click', ()=>toggleSlot(td));
-      tr.appendChild(td);
+      const th = document.createElement('th');
+      const day = d.getDay();
+      th.className = 'date-col' + (day===0?' sun':day===6?' sat':'');
+      th.innerHTML = `<span class="dow">${dow[day]}</span><span class="dnum">${d.getMonth()+1}/${d.getDate()}</span>`;
+      headRow.appendChild(th);
     });
-    tbody.appendChild(tr);
-  });
-  table.appendChild(tbody);
+    thead.appendChild(headRow);
+    table.appendChild(thead);
 
-  const chipsEl = document.getElementById('chips');
+    const tbody = document.createElement('tbody');
+    times.forEach(h=>{
+      const tr = document.createElement('tr');
+      const timeTd = document.createElement('td');
+      timeTd.className = 'time-col'; timeTd.textContent = `${pad(h)}:00`;
+      tr.appendChild(timeTd);
+      dates.forEach(d=>{
+        const td = document.createElement('td');
+        td.className = 'slot';
+        const k = keyOf(d,h);
+        td.dataset.key = k;
+        td.dataset.label = labelOf(d,h);
+        const mark = document.createElement('span');
+        mark.className = 'mark';
+        const isNg = ngSet.has(k);
 
-  function toggleSlot(td){
-    const k = td.dataset.key;
-    if(selected.has(k)){
-      selected.delete(k);
-      td.classList.remove('selected');
-    } else {
-      selected.add(k);
-      td.classList.add('selected');
-    }
-    renderChips();
+        if(mode === 'admin'){
+          if(isNg){ td.classList.add('ng'); mark.innerHTML = svgX; }
+          td.appendChild(mark);
+          td.addEventListener('click', ()=>{
+            if(ngSet.has(k)){ ngSet.delete(k); td.classList.remove('ng'); mark.innerHTML=''; }
+            else{ ngSet.add(k); td.classList.add('ng'); mark.innerHTML = svgX; }
+          });
+        } else {
+          if(isNg){
+            td.classList.add('ng','locked');
+            mark.innerHTML = svgX;
+            td.appendChild(mark);
+            td.setAttribute('aria-disabled','true');
+          } else {
+            td.appendChild(mark);
+            td.addEventListener('click', ()=>{
+              const nowSelected = td.classList.toggle('selected');
+              mark.innerHTML = nowSelected ? svgCheck : '';
+              if(onChange) onChange();
+            });
+          }
+        }
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
   }
+
+  /* ================= 管理者ビュー ================= */
+  const adminView = document.getElementById('adminView');
+  const respondentView = document.getElementById('respondentView');
+  const adminBase = (()=>{ const d = new Date(); d.setDate(d.getDate()+1); d.setHours(0,0,0,0); return d; })();
+  const adminDates = datesFrom(adminBase);
+  const times = timesRange();
+  const adminNgSet = new Set();
+  const adminTable = document.getElementById('adminTable');
+  renderTable(adminTable, adminDates, times, adminNgSet, 'admin');
+
+  function ymd(d){ return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`; }
+
+  document.getElementById('genLinkBtn').addEventListener('click', ()=>{
+    const startParam = ymd(adminBase);
+    const closedParam = Array.from(adminNgSet).join(',');
+    const url = new URL(window.location.href.split('?')[0]);
+    url.searchParams.set('start', startParam);
+    url.searchParams.set('closed', closedParam);
+    const linkBox = document.getElementById('linkBox');
+    const linkOutput = document.getElementById('linkOutput');
+    linkOutput.value = url.toString();
+    linkBox.style.display = 'flex';
+  });
+
+  document.getElementById('copyLinkBtn').addEventListener('click', ()=>{
+    const linkOutput = document.getElementById('linkOutput');
+    if(!linkOutput.value) return;
+    navigator.clipboard.writeText(linkOutput.value).then(()=>{
+      const note = document.getElementById('copyLinkNote');
+      note.classList.add('show');
+      setTimeout(()=>note.classList.remove('show'), 1800);
+    });
+  });
+
+  document.getElementById('previewBtn').addEventListener('click', ()=>{
+    adminView.style.display = 'none';
+    respondentView.style.display = 'block';
+    document.getElementById('previewNotice').style.display = 'block';
+    buildRespondentTable(adminBase, adminNgSet);
+  });
+
+  document.getElementById('backToAdminBtn').addEventListener('click', ()=>{
+    respondentView.style.display = 'none';
+    adminView.style.display = 'block';
+  });
+
+  function escapeHtml(str){
+    return String(str==null?'':str).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  document.getElementById('fetchResponsesBtn').addEventListener('click', loadResponses);
+
+  async function loadResponses(){
+    const statusEl = document.getElementById('responsesStatus');
+    if(!WEBAPP_URL || WEBAPP_URL.indexOf('ここに') === 0){
+      statusEl.textContent = 'Google Apps ScriptのウェブアプリURLがまだ設定されていません。';
+      statusEl.style.color = 'var(--color-seal)';
+      return;
+    }
+    statusEl.textContent = '取得中…';
+    statusEl.style.color = 'var(--color-ink-soft)';
+    try{
+      const res = await fetch(WEBAPP_URL);
+      if(!res.ok) throw new Error('response not ok');
+      const data = await res.json();
+      renderResponses(data);
+      statusEl.textContent = `${data.length}件の回答を取得しました。`;
+      statusEl.style.color = 'var(--color-success)';
+    }catch(err){
+      statusEl.textContent = '取得に失敗しました。ウェブアプリの公開設定（アクセスできるユーザー：全員）をご確認ください。';
+      statusEl.style.color = 'var(--color-seal)';
+    }
+  }
+
+  function renderResponses(data){
+    // ---- 人気の候補日時ランキング ----
+    const counts = {};
+    data.forEach(row=>{
+      (row.slots||[]).forEach(s=>{ counts[s] = (counts[s]||0) + 1; });
+    });
+    const ranking = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,10);
+    const rankingBars = document.getElementById('rankingBars');
+    const rankingBlock = document.getElementById('rankingBlock');
+    rankingBars.innerHTML = '';
+    if(ranking.length){
+      const max = ranking[0][1];
+      ranking.forEach(([label,count])=>{
+        const row = document.createElement('div');
+        row.className = 'rank-row';
+        row.innerHTML = `<span class="rank-label">${escapeHtml(label)}</span><span class="rank-bar-bg"><span class="rank-bar-fill" style="width:${Math.max(6,(count/max*100))}%"></span></span><span class="rank-count">${count}件</span>`;
+        rankingBars.appendChild(row);
+      });
+      rankingBlock.style.display = 'block';
+    } else {
+      rankingBlock.style.display = 'none';
+    }
+
+    // ---- 回答一覧テーブル ----
+    const table = document.getElementById('responseListTable');
+    const tableBlock = document.getElementById('responseTableBlock');
+    table.innerHTML = '';
+    if(!data.length){ tableBlock.style.display = 'none'; return; }
+
+    const sorted = [...data].sort((a,b)=> new Date(b.timestamp) - new Date(a.timestamp));
+    const thead = document.createElement('thead');
+    thead.innerHTML = '<tr><th>送信日時</th><th>お名前</th><th>連絡先</th><th>面談形式</th><th>候補日時</th></tr>';
+    table.appendChild(thead);
+    const tbody = document.createElement('tbody');
+    sorted.forEach(row=>{
+      const tr = document.createElement('tr');
+      const dt = new Date(row.timestamp);
+      const dtLabel = isNaN(dt) ? escapeHtml(row.timestamp) : `${dt.getFullYear()}/${dt.getMonth()+1}/${dt.getDate()} ${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+      const slotsHtml = (row.slots||[]).map(s=>`<span class="slot-chip">${escapeHtml(s)}</span>`).join('');
+      tr.innerHTML = `<td class="ts">${dtLabel}</td><td>${escapeHtml(row.name)}</td><td>${escapeHtml(row.contact)}</td><td>${escapeHtml(row.format)}</td><td>${slotsHtml}</td>`;
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    tableBlock.style.display = 'block';
+  }
+
+  /* ================= 回答者ビュー ================= */
+  const respTable = document.getElementById('respTable');
+  const chipsEl = document.getElementById('chips');
+  let respDates = [];
 
   function renderChips(){
     chipsEl.innerHTML = '';
-    if(selected.size===0){
+    const selectedTds = Array.from(respTable.querySelectorAll('td.slot.selected'));
+    if(selectedTds.length===0){
       chipsEl.innerHTML = '<span class="empty-note">まだ選択されていません</span>';
       return;
     }
-    // sort by key (chronological since keys are zero-padded)
-    const sortedKeys = Array.from(selected).sort();
-    sortedKeys.forEach(k=>{
-      const td = table.querySelector(`td[data-key="${k}"]`);
+    selectedTds.sort((a,b)=> a.dataset.key < b.dataset.key ? -1 : 1);
+    selectedTds.forEach(td=>{
       const chip = document.createElement('span');
       chip.className = 'chip';
       chip.innerHTML = `${td.dataset.label} <button type="button" aria-label="削除">&times;</button>`;
-      chip.querySelector('button').addEventListener('click', ()=>toggleSlot(td));
+      chip.querySelector('button').addEventListener('click', ()=>{
+        td.classList.remove('selected');
+        td.querySelector('.mark').innerHTML = '';
+        renderChips();
+      });
       chipsEl.appendChild(chip);
     });
   }
 
-  // ---------- 面談形式 ----------
+  function buildRespondentTable(baseDate, ngSet){
+    respDates = datesFrom(baseDate);
+    renderTable(respTable, respDates, times, ngSet, 'respondent', renderChips);
+    renderChips();
+  }
+
+  /* URLパラメータの解析（共有リンクから開かれた場合） */
+  const params = new URLSearchParams(window.location.search);
+  const startParam = params.get('start');
+  if(startParam && /^\d{8}$/.test(startParam)){
+    const y = parseInt(startParam.slice(0,4),10);
+    const m = parseInt(startParam.slice(4,6),10)-1;
+    const day = parseInt(startParam.slice(6,8),10);
+    const base = new Date(y,m,day);
+    const closedParam = params.get('closed') || '';
+    const ngSet = new Set(closedParam.split(',').filter(Boolean));
+    adminView.style.display = 'none';
+    respondentView.style.display = 'block';
+    buildRespondentTable(base, ngSet);
+  }
+
+  /* ---------- 面談形式 ---------- */
   const formatOptions = document.getElementById('formatOptions');
   const formatInput = document.getElementById('format');
   formatOptions.querySelectorAll('.format-card').forEach(card=>{
     card.addEventListener('click', ()=>selectFormat(card));
-    card.addEventListener('keydown', e=>{
-      if(e.key==='Enter' || e.key===' '){ e.preventDefault(); selectFormat(card); }
-    });
+    card.addEventListener('keydown', e=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); selectFormat(card); } });
   });
   function selectFormat(card){
-    formatOptions.querySelectorAll('.format-card').forEach(c=>{
-      c.classList.remove('selected');
-      c.setAttribute('aria-checked','false');
-    });
-    card.classList.add('selected');
-    card.setAttribute('aria-checked','true');
+    formatOptions.querySelectorAll('.format-card').forEach(c=>{ c.classList.remove('selected'); c.setAttribute('aria-checked','false'); });
+    card.classList.add('selected'); card.setAttribute('aria-checked','true');
     formatInput.value = card.dataset.value;
   }
 
-  // ---------- 送信 / 確認画面 ----------
+  /* ---------- 送信 / 確認モーダル / 確認画面 ---------- */
   const form = document.getElementById('scheduleForm');
   const errorMsg = document.getElementById('errorMsg');
   const confirmSection = document.getElementById('confirm');
-
   const modalOverlay = document.getElementById('modalOverlay');
+  let pendingSubmission = null;
 
   function buildSlotChips(container){
     container.innerHTML = '';
-    Array.from(selected).sort().forEach(k=>{
-      const td = table.querySelector(`td[data-key="${k}"]`);
+    const selectedTds = Array.from(respTable.querySelectorAll('td.slot.selected'));
+    selectedTds.sort((a,b)=> a.dataset.key < b.dataset.key ? -1 : 1);
+    selectedTds.forEach(td=>{
       const c = document.createElement('span');
       c.className = container.id==='mSlots' ? 'mchip' : 'cchip';
       c.textContent = td.dataset.label;
@@ -755,16 +730,20 @@
     const name = document.getElementById('name').value.trim();
     const contact = document.getElementById('contact').value.trim();
     const format = formatInput.value;
+    const hasSelection = respTable.querySelector('td.slot.selected') !== null;
 
-    if(!name || !contact || !format || selected.size===0){
+    if(!name || !contact || !format || !hasSelection){
       errorMsg.style.display = 'block';
       return;
     }
     errorMsg.style.display = 'none';
 
     const formatLabel = format==='google_meet' ? 'Google Meet（オンライン）' : '対面';
+    const slotLabels = Array.from(respTable.querySelectorAll('td.slot.selected'))
+      .sort((a,b)=> a.dataset.key < b.dataset.key ? -1 : 1)
+      .map(td=>td.dataset.label);
+    pendingSubmission = { name, contact, format: formatLabel, slots: slotLabels };
 
-    // まず確認モーダルに内容を表示
     document.getElementById('mName').textContent = name;
     document.getElementById('mContact').textContent = contact;
     document.getElementById('mFormat').textContent = formatLabel;
@@ -779,15 +758,30 @@
 
   document.getElementById('modalOk').addEventListener('click', ()=>{
     modalOverlay.classList.remove('show');
-
     document.getElementById('cName').textContent = document.getElementById('mName').textContent;
     document.getElementById('cContact').textContent = document.getElementById('mContact').textContent;
     document.getElementById('cFormat').textContent = document.getElementById('mFormat').textContent;
     buildSlotChips(document.getElementById('cSlots'));
-
     form.style.display = 'none';
     confirmSection.style.display = 'block';
     confirmSection.scrollIntoView({behavior:'smooth', block:'start'});
+
+    const statusEl = document.getElementById('sheetStatus');
+    if(pendingSubmission){
+      statusEl.textContent = 'Googleスプレッドシートに送信中…';
+      statusEl.style.color = 'var(--color-ink-soft)';
+      sendToSheet(pendingSubmission).then(res=>{
+        if(res.skipped){
+          statusEl.textContent = '';
+        } else if(res.sent){
+          statusEl.textContent = 'Googleスプレッドシートに送信しました。';
+          statusEl.style.color = 'var(--color-success)';
+        } else {
+          statusEl.textContent = '送信に失敗しました。お手数ですが「内容をコピーする」から手動で共有してください。';
+          statusEl.style.color = 'var(--color-seal)';
+        }
+      });
+    }
   });
 
   document.getElementById('backBtn').addEventListener('click', ()=>{
@@ -808,7 +802,6 @@
       setTimeout(()=>note.classList.remove('show'), 1800);
     });
   });
-
 })();
 </script>
 </body>
