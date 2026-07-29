@@ -2,8 +2,10 @@
 // ブラウザとGoogle Apps Script(GAS)の間に立つ中継サーバー。
 // ブラウザは常にこの/api/gasだけを呼び出すので、CORSの制限にかかりません。
 // (サーバー同士の通信にはCORSの制約が無いため)
+//
+// package.jsonの有無や設定に依存しないよう、CommonJS形式(module.exports)で書いています。
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   // ここにご自身のGASウェブアプリのURLを入れてください
   const GAS_URL = "https://script.google.com/macros/s/AKfycbzF_yc43D4sUpN3pTbhG-u3Gkb9porCVuoqH7rhWJk5ObYu0glbZuP2tzB_7i8vTZK2/exec";
 
@@ -36,4 +38,4 @@ export default async function handler(req, res) {
   } catch (err) {
     res.status(500).json({ error: 'proxy failed', detail: String(err) });
   }
-}
+};
