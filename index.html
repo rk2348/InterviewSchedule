@@ -510,15 +510,15 @@
   }
 
   const DEFAULT_DAYS = 14;
-  const DEFAULT_START_HOUR = 9;
-  const DEFAULT_END_HOUR = 19;
+  const DEFAULT_START_HOUR = 9 * 60;
+  const DEFAULT_END_HOUR = 19 * 60;
   const dow = ['日','月','火','水','木','金','土'];
 
   function pad(n){return n.toString().padStart(2,'0');}
   function hmParts(mins){ return { h: Math.floor(mins/60), m: mins % 60 }; }
   function keyOf(d,mins){ const {h,m}=hmParts(mins); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(h)}${pad(m)}`; }
   function labelOf(d,mins){ const {h,m}=hmParts(mins); return `${d.getMonth()+1}/${d.getDate()}(${dow[d.getDay()]}) ${pad(h)}:${pad(m)}`; }
-  function timesRange(startHour, endHour){ const t=[]; for(let mins=startHour*60; mins<=endHour*60; mins+=30) t.push(mins); return t; }
+  function timesRange(startMinutes, endMinutes){ const t=[]; for(let mins=startMinutes; mins<=endMinutes; mins+=30) t.push(mins); return t; }
 
   function datesFrom(base, days){
     const arr=[];
@@ -644,9 +644,15 @@
   function populateHourSelects(){
     const startSel = document.getElementById('rangeStartHour');
     const endSel = document.getElementById('rangeEndHour');
-    for(let h=0; h<24; h++){
-      const o1 = document.createElement('option'); o1.value = h; o1.textContent = pad(h)+':00'; startSel.appendChild(o1);
-      const o2 = document.createElement('option'); o2.value = h; o2.textContent = pad(h)+':00'; endSel.appendChild(o2);
+    startSel.innerHTML = '';
+    endSel.innerHTML = '';
+    // 0:00〜24:00 を30分刻みで生成
+    for(let mins=0; mins<=24*60; mins+=30){
+      const h = Math.floor(mins/60);
+      const m = mins % 60;
+      const label = `${pad(h)}:${pad(m)}`;
+      const o1 = document.createElement('option'); o1.value = mins; o1.textContent = label; startSel.appendChild(o1);
+      const o2 = document.createElement('option'); o2.value = mins; o2.textContent = label; endSel.appendChild(o2);
     }
     startSel.value = adminState.startHour;
     endSel.value = adminState.endHour;
