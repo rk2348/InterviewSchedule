@@ -286,6 +286,7 @@
   .modal-table .mchip{background:var(--color-seal-soft); color:var(--color-seal); font-size:11.5px; padding:3px 8px; border-radius:11px;}
   .modal-actions{display:flex; gap:10px; justify-content:flex-end;}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
 </head>
 <body class="paper-texture">
 <div class="page">
@@ -685,12 +686,20 @@
 
   document.getElementById('genLinkBtn').addEventListener('click', ()=>{
     const url = new URL(window.location.href.split('?')[0]);
-    url.searchParams.set('s', toEpochDays(adminState.baseDate).toString(36));
-    url.searchParams.set('d', adminState.days.toString(36));
-    url.searchParams.set('a', adminState.startHour.toString(36));
-    url.searchParams.set('b', adminState.endHour.toString(36));
-    const closedParam = Array.from(adminNgSet).map(n => n.toString(36)).join('.');
-    url.searchParams.set('c', closedParam);
+    
+    // 設定データをひとまとめにする
+    const data = {
+      s: toEpochDays(adminState.baseDate),
+      d: adminState.days,
+      a: adminState.startHour,
+      b: adminState.endHour,
+      c: Array.from(adminNgSet)
+    };
+    
+    // JSON化してLZStringでURLセーフな文字列に圧縮
+    const compressed = LZString.compressToEncodedURIComponent(JSON.stringify(data));
+    url.searchParams.set('q', compressed); // ?q=圧縮文字列 の形にする
+    
     const linkBox = document.getElementById('linkBox');
     const linkOutput = document.getElementById('linkOutput');
     linkOutput.value = url.toString();
@@ -997,8 +1006,25 @@
 
   /* URLパラメータの解析（共有リンクから開かれた場合） */
   const params = new URLSearchParams(window.location.search);
-  const sParam = params.get('s');
-  if(sParam){
+  const qParam = params.get('q'); // 圧縮版のパラメータ
+  const sParam = params.get('s'); // 従来のパラメータ（互換性維持用）
+
+  if(qParam){
+    // 圧縮URLから開かれた場合
+    try {
+      const decompressed = LZString.decompressFromEncodedURIComponent(qParam);
+      const data = JSON.parse(decompressed);
+      const base = fromEpochDays(data.s);
+      const ngSet = new Set(data.c);
+      
+      adminView.style.display = 'none';
+      respondentView.style.display = 'block';
+      buildRespondentTable(base, ngSet, data.d, data.a, data.b);
+    } catch(e) {
+      console.error("URLの解析に失敗しました", e);
+    }
+  } else if(sParam){
+    // 従来のURLから開かれた場合
     const epochDays = parseInt(sParam, 36);
     const base = fromEpochDays(epochDays);
     const days = params.has('d') ? parseInt(params.get('d'), 36) : DEFAULT_DAYS;
