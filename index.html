@@ -1047,7 +1047,7 @@ DevelopersHub Conference 2027 統括
       </div>
       <div class="modal-actions">
         <button type="button" class="secondary" id="mailModalCancel">キャンセル</button>
-        <button type="button" class="primary" id="mailModalOpen">メールソフトで開く</button>
+        <button type="button" class="primary" id="mailModalOpen">Gmailで開く</button>
       </div>`;
 
     const durSel = document.getElementById('mailDurationSelect');
@@ -1067,8 +1067,9 @@ DevelopersHub Conference 2027 統括
       const d = parseInt(durSel.value, 10);
       const finalContent = buildMailContent(row, slotLabel, d);
       const toEmail = document.getElementById('mailToInput').value.trim();
-      const mailto = `mailto:${encodeURIComponent(toEmail)}?subject=${encodeURIComponent(finalContent.subject)}&body=${encodeURIComponent(finalContent.body)}`;
-      window.location.href = mailto;
+      // Gmailのウェブ版で新規作成画面を開く（別タブ）
+      const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(toEmail)}&su=${encodeURIComponent(finalContent.subject)}&body=${encodeURIComponent(finalContent.body)}`;
+      window.open(gmailUrl, '_blank');
       closeMailModal();
     });
   }
