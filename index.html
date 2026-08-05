@@ -979,7 +979,7 @@
     const startStr = `${pad(p.hh)}:${pad(p.mm)}`;
     const endStr = `${pad(end.hh)}:${pad(end.mm)}`;
     const isOnline = /Google Meet/i.test(row.format);
-    const placeLine = isOnline ? '下記URLから入室' : 'KIT 〇号館〇階 〇〇室';
+    const placeLine = isOnline ? '下記URLから入室' : '自習室';
     const linkLine = isOnline ? `\n（オンラインの場合）接続リンク：〇〇〇` : '';
 
     const subject = '【DevelopersHub Conference 2027】面談日程のご連絡';
@@ -1005,8 +1005,28 @@
 DevelopersHub Conference 2027 統括
 黒川稜真`;
 
+    // Slack向け（*太字*記法、件名なし、宛先はDM想定なので文言を少し調整）
+    const slackText =
+`${row.name}さん
+
+お疲れ様です！統括チームの黒川です。
+
+日程調整フォームへのご回答ありがとうございます！下記の日程で面談（1on1）を設定させていただきました。
+
+*日時*：${p.month}月${p.day}日（${p.wd}）${startStr} 〜 ${endStr}（約${durationMin}分）
+*形式*：${row.format}
+*場所*：${placeLine}${linkLine}
+
+当日は雑談からのんびりと始めますので、特に事前の準備などは必要ありません。普段通りの感じで参加してもらえればと思います。
+
+もし当日の都合が悪くなった場合や、日時の変更が必要な場合は、遠慮なくこのDMで、またはメールでお知らせください。
+
+よろしくお願いします！
+
+DevelopersHub Conference 2027 統括　黒川稜真`;
+
     const toEmail = /\S+@\S+\.\S+/.test(row.contact) ? row.contact.trim() : '';
-    return { subject, body, toEmail };
+    return { subject, body, slackText, toEmail };
   }
 
   function openMailModal(row, slotLabel){
@@ -1047,6 +1067,7 @@ DevelopersHub Conference 2027 統括
       </div>
       <div class="modal-actions">
         <button type="button" class="secondary" id="mailModalCancel">キャンセル</button>
+        <button type="button" class="secondary" id="slackCopyBtn">Slack用にコピー<span class="copy-note" id="slackCopyNote">コピーしました</span></button>
         <button type="button" class="primary" id="mailModalOpen">Gmailで開く</button>
       </div>`;
 
@@ -1063,6 +1084,15 @@ DevelopersHub Conference 2027 統括
     durSel.addEventListener('change', updatePreview);
 
     document.getElementById('mailModalCancel').addEventListener('click', closeMailModal);
+    document.getElementById('slackCopyBtn').addEventListener('click', ()=>{
+      const d = parseInt(durSel.value, 10);
+      const finalContent = buildMailContent(row, slotLabel, d);
+      navigator.clipboard.writeText(finalContent.slackText).then(()=>{
+        const note = document.getElementById('slackCopyNote');
+        note.classList.add('show');
+        setTimeout(()=>note.classList.remove('show'), 1800);
+      });
+    });
     document.getElementById('mailModalOpen').addEventListener('click', ()=>{
       const d = parseInt(durSel.value, 10);
       const finalContent = buildMailContent(row, slotLabel, d);
