@@ -201,6 +201,8 @@
     display:inline-block; background:var(--color-seal-soft); color:var(--color-seal);
     font-size:11px; padding:3px 8px; border-radius:10px; margin:2px 4px 2px 0; white-space:nowrap;
   }
+  a.slot-chip{cursor:pointer; text-decoration:none; border:1px solid transparent; transition:background .15s, border-color .15s;}
+  a.slot-chip:hover{background:var(--color-seal-soft2); border-color:var(--color-seal);}
   .status-badge{
     border:none; cursor:pointer; font-family:'Noto Sans JP',sans-serif;
     font-size:11.5px; font-weight:500; padding:6px 12px; border-radius:14px;
@@ -285,6 +287,13 @@
   .modal-table .mchips{display:flex; flex-wrap:wrap; gap:5px;}
   .modal-table .mchip{background:var(--color-seal-soft); color:var(--color-seal); font-size:11.5px; padding:3px 8px; border-radius:11px;}
   .modal-actions{display:flex; gap:10px; justify-content:flex-end;}
+
+  /* ---------- メール作成モーダル ---------- */
+  .mail-modal .modal-box{max-width:520px;}
+  .mail-field{display:flex; flex-direction:column; gap:6px; font-size:12.5px; color:var(--color-ink-soft); margin-bottom:14px;}
+  .mail-field select{width:auto; min-width:120px;}
+  .mail-duration-row{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  .mail-duration-row .mail-time-preview{font-size:13.5px; color:var(--color-ink); font-family:'Shippori Mincho',serif;}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
 </head>
@@ -353,7 +362,7 @@
 
     <section class="card">
       <div class="section-head"><span class="section-num">04</span><h2>回答一覧</h2></div>
-      <p class="grid-hint">Googleスプレッドシートに集まった回答を取得して表示します。</p>
+      <p class="grid-hint">Googleスプレッドシートに集まった回答を取得して表示します。候補日時のチップをクリックすると、その日時で面談確定メールの下書きを作成できます。</p>
       <div class="submit-row" style="justify-content:flex-start;">
         <button type="button" class="secondary" id="fetchResponsesBtn">回答を取得する</button>
         <button type="button" class="danger-outline" id="clearAllBtn">回答一覧をクリアにする</button>
@@ -486,6 +495,11 @@
   <!-- ============ 削除用 2段階確認モーダル ============ -->
   <div class="modal-overlay" id="deleteModalOverlay">
     <div class="modal-box" id="deleteModalBox"></div>
+  </div>
+
+  <!-- ============ 面談確定メール作成モーダル ============ -->
+  <div class="modal-overlay mail-modal" id="mailModalOverlay">
+    <div class="modal-box" id="mailModalBox"></div>
   </div>
 
 </div>
@@ -941,6 +955,124 @@
     }
   }
 
+  /* ---------- 面談確定メールの下書き作成 ---------- */
+  const mailModalOverlay = document.getElementById('mailModalOverlay');
+  const mailModalBox = document.getElementById('mailModalBox');
+
+  // 「7/29(水) 14:00」のようなラベルを分解する
+  function parseSlotLabel(label){
+    const m = String(label).match(/^(\d{1,2})\/(\d{1,2})\(([^)]+)\)\s+(\d{2}):(\d{2})$/);
+    if(!m) return null;
+    return { month: parseInt(m[1],10), day: parseInt(m[2],10), wd: m[3], hh: parseInt(m[4],10), mm: parseInt(m[5],10) };
+  }
+
+  function addMinutes(hh, mm, add){
+    let total = hh*60 + mm + add;
+    total = ((total % 1440) + 1440) % 1440;
+    return { hh: Math.floor(total/60), mm: total%60 };
+  }
+
+  function buildMailContent(row, slotLabel, durationMin){
+    const p = parseSlotLabel(slotLabel);
+    if(!p) return null;
+    const end = addMinutes(p.hh, p.mm, durationMin);
+    const startStr = `${pad(p.hh)}:${pad(p.mm)}`;
+    const endStr = `${pad(end.hh)}:${pad(end.mm)}`;
+    const isOnline = /Google Meet/i.test(row.format);
+    const placeLine = isOnline ? '下記URLから入室' : 'KIT 〇号館〇階 〇〇室';
+    const linkLine = isOnline ? `\n（オンラインの場合）接続リンク：〇〇〇` : '';
+
+    const subject = '【DevelopersHub Conference 2027】面談日程のご連絡';
+    const body =
+`${row.name}さん
+
+お疲れ様です！統括チームの黒川です。
+
+日程調整フォームへのご回答ありがとうございます！下記の日程で面談（1on1）を設定させていただきました。
+
+■ 日時：${p.month}月${p.day}日（${p.wd}）${startStr} 〜 ${endStr}（約${durationMin}分）
+■ 形式：${row.format}
+■ 場所：${placeLine}${linkLine}
+
+当日は雑談からのんびりと始めますので、特に事前の準備などは必要ありません。普段通りの感じで参加してもらえればと思います。
+
+もし当日の都合が悪くなった場合や、日時の変更が必要な場合は、遠慮なくこのメールに返信するか、SlackのDMでお知らせください。
+
+よろしくお願いします！
+
+
+
+DevelopersHub Conference 2027 統括
+黒川稜真`;
+
+    const toEmail = /\S+@\S+\.\S+/.test(row.contact) ? row.contact.trim() : '';
+    return { subject, body, toEmail };
+  }
+
+  function openMailModal(row, slotLabel){
+    let duration = 30;
+    renderMailModal(row, slotLabel, duration);
+    mailModalOverlay.classList.add('show');
+  }
+
+  function closeMailModal(){
+    mailModalOverlay.classList.remove('show');
+  }
+
+  function renderMailModal(row, slotLabel, duration){
+    const content = buildMailContent(row, slotLabel, duration);
+    if(!content){
+      closeMailModal();
+      alert('日時の解析に失敗しました。');
+      return;
+    }
+    mailModalBox.innerHTML = `
+      <h3>面談確定メールを作成</h3>
+      <p class="modal-sub">${escapeHtml(row.name)}さん / ${escapeHtml(slotLabel)} の内容でメール下書きを開きます。</p>
+      <div class="mail-field">
+        <span>面談時間</span>
+        <div class="mail-duration-row">
+          <select id="mailDurationSelect">
+            <option value="15">15分</option>
+            <option value="30">30分</option>
+            <option value="45">45分</option>
+            <option value="60">60分</option>
+          </select>
+          <span class="mail-time-preview" id="mailTimePreview"></span>
+        </div>
+      </div>
+      <div class="mail-field">
+        <span>宛先</span>
+        <input type="text" id="mailToInput" placeholder="メールアドレスが見つかりませんでした。手動で入力してください" value="${escapeHtml(content.toEmail)}">
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="secondary" id="mailModalCancel">キャンセル</button>
+        <button type="button" class="primary" id="mailModalOpen">メールソフトで開く</button>
+      </div>`;
+
+    const durSel = document.getElementById('mailDurationSelect');
+    durSel.value = String(duration);
+    const preview = document.getElementById('mailTimePreview');
+    function updatePreview(){
+      const d = parseInt(durSel.value, 10);
+      const p = parseSlotLabel(slotLabel);
+      const end = addMinutes(p.hh, p.mm, d);
+      preview.textContent = `${pad(p.hh)}:${pad(p.mm)} 〜 ${pad(end.hh)}:${pad(end.mm)}`;
+    }
+    updatePreview();
+    durSel.addEventListener('change', updatePreview);
+
+    document.getElementById('mailModalCancel').addEventListener('click', closeMailModal);
+    document.getElementById('mailModalOpen').addEventListener('click', ()=>{
+      const d = parseInt(durSel.value, 10);
+      const finalContent = buildMailContent(row, slotLabel, d);
+      const toEmail = document.getElementById('mailToInput').value.trim();
+      const mailto = `mailto:${encodeURIComponent(toEmail)}?subject=${encodeURIComponent(finalContent.subject)}&body=${encodeURIComponent(finalContent.body)}`;
+      window.location.href = mailto;
+      closeMailModal();
+    });
+  }
+
   function renderResponses(data){
     lastResponses = data;
 
@@ -983,7 +1115,9 @@
       tr.className = isDone ? 'done' : '';
       const dt = new Date(row.timestamp);
       const dtLabel = isNaN(dt) ? escapeHtml(row.timestamp) : `${dt.getFullYear()}/${dt.getMonth()+1}/${dt.getDate()} ${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
-      const slotsHtml = (row.slots||[]).map(s=>`<span class="slot-chip">${escapeHtml(s)}</span>`).join('');
+      const slotsHtml = (row.slots||[]).map(s=>
+        `<a href="javascript:void(0)" class="slot-chip" data-row="${row.row}" data-slot="${escapeHtml(s)}" title="クリックしてこの日時で面談確定メールを作成">${escapeHtml(s)}</a>`
+      ).join('');
       const statusHtml = `<button type="button" class="status-badge ${isDone?'status-done':'status-pending'}" data-row="${row.row}" data-status="${escapeHtml(row.status)}">${isDone ? '✓ 面接完了' : '対応待ち'}</button>`;
       const deleteHtml = `<button type="button" class="row-delete-btn" data-row="${row.row}">削除</button>`;
       tr.innerHTML = `<td class="ts">${dtLabel}</td><td>${escapeHtml(row.name)}</td><td>${escapeHtml(row.contact)}</td><td>${escapeHtml(row.format)}</td><td>${slotsHtml}</td><td>${statusHtml}</td><td>${deleteHtml}</td>`;
@@ -997,6 +1131,14 @@
     });
     table.querySelectorAll('.row-delete-btn').forEach(btn=>{
       btn.addEventListener('click', ()=>openDeleteModal(Number(btn.dataset.row)));
+    });
+    table.querySelectorAll('a.slot-chip').forEach(a=>{
+      a.addEventListener('click', ()=>{
+        const rowNum = Number(a.dataset.row);
+        const row = lastResponses.find(r=>r.row === rowNum);
+        if(!row) return;
+        openMailModal(row, a.dataset.slot);
+      });
     });
   }
 
