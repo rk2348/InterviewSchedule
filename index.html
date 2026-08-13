@@ -174,6 +174,7 @@
   }
   button.primary:hover{background:#2A3346;}
   button.primary:active{transform:scale(.98);}
+  button.primary:disabled{opacity:.6; cursor:default;}
   button.secondary{
     font-family:'Noto Sans JP',sans-serif; font-size:13.5px; color:var(--color-ink); background:#fff;
     border:1px solid var(--color-line); padding:10px 18px; border-radius:var(--radius-s); cursor:pointer;
@@ -225,6 +226,12 @@
     transition:border-color .15s, color .15s; white-space:nowrap;
   }
   .row-delete-btn:hover{border-color:var(--color-seal); color:var(--color-seal);}
+
+  .meet-link-badge{
+    display:inline-flex; align-items:center; gap:4px; font-size:11px; color:var(--color-sat);
+    text-decoration:none; margin-top:4px;
+  }
+  .meet-link-badge:hover{text-decoration:underline;}
 
   button.danger{
     font-family:'Noto Sans JP',sans-serif; font-size:13.5px; font-weight:500; color:#fff;
@@ -294,6 +301,11 @@
   .mail-field select{width:auto; min-width:120px;}
   .mail-duration-row{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
   .mail-duration-row .mail-time-preview{font-size:13.5px; color:var(--color-ink); font-family:'Shippori Mincho',serif;}
+  .auto-confirm-note{font-size:12.5px; color:var(--color-ink-soft); margin:0 0 16px; line-height:1.7;}
+  .auto-confirm-result{display:none; font-size:12.5px; background:var(--color-ng-bg); border-radius:6px; padding:10px 12px; margin-bottom:14px; line-height:1.9;}
+  .mail-modal details{margin-top:16px;}
+  .mail-modal summary{cursor:pointer; font-size:12.5px; color:var(--color-ink-soft);}
+  .mail-modal summary:hover{color:var(--color-ink);}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
 </head>
@@ -362,7 +374,7 @@
 
     <section class="card">
       <div class="section-head"><span class="section-num">04</span><h2>回答一覧</h2></div>
-      <p class="grid-hint">Googleスプレッドシートに集まった回答を取得して表示します。候補日時のチップをクリックすると、その日時で面談確定メールの下書きを作成できます。</p>
+      <p class="grid-hint">Googleスプレッドシートに集まった回答を取得して表示します。候補日時のチップをクリックすると、その日時で面談を自動的に確定できます（カレンダー登録・Google Meetリンク発行・メール送信・Slack通知をまとめて実行します）。</p>
       <div class="submit-row" style="justify-content:flex-start;">
         <button type="button" class="secondary" id="fetchResponsesBtn">回答を取得する</button>
         <button type="button" class="danger-outline" id="clearAllBtn">回答一覧をクリアにする</button>
@@ -497,7 +509,7 @@
     <div class="modal-box" id="deleteModalBox"></div>
   </div>
 
-  <!-- ============ 面談確定メール作成モーダル ============ -->
+  <!-- ============ 面談確定モーダル（自動送信） ============ -->
   <div class="modal-overlay mail-modal" id="mailModalOverlay">
     <div class="modal-box" id="mailModalBox"></div>
   </div>
@@ -955,15 +967,27 @@
     }
   }
 
-  /* ---------- 面談確定メールの下書き作成 ---------- */
+  /* ---------- 面談確定（自動送信）モーダル ---------- */
   const mailModalOverlay = document.getElementById('mailModalOverlay');
   const mailModalBox = document.getElementById('mailModalBox');
 
-  // 「7/29(水) 14:00」のようなラベルを分解する
-  function parseSlotLabel(label){
+  // 新形式："YYYY-MM-DD_HHMM"（年を含む・正確）
+  function parseSlotKey(key){
+    if(!key) return null;
+    const m = String(key).match(/^(\d{4})-(\d{2})-(\d{2})_(\d{2})(\d{2})$/);
+    if(!m) return null;
+    const year=parseInt(m[1],10), month=parseInt(m[2],10), day=parseInt(m[3],10), hh=parseInt(m[4],10), mm=parseInt(m[5],10);
+    const d = new Date(year, month-1, day);
+    return { year, month, day, hh, mm, wd: dow[d.getDay()] };
+  }
+  // 旧形式のデータ（年情報なし）向けの後方互換フォールバック
+  function parseSlotLabelLegacy(label){
     const m = String(label).match(/^(\d{1,2})\/(\d{1,2})\(([^)]+)\)\s+(\d{2}):(\d{2})$/);
     if(!m) return null;
-    return { month: parseInt(m[1],10), day: parseInt(m[2],10), wd: m[3], hh: parseInt(m[4],10), mm: parseInt(m[5],10) };
+    return { year: new Date().getFullYear(), month: parseInt(m[1],10), day: parseInt(m[2],10), wd: m[3], hh: parseInt(m[4],10), mm: parseInt(m[5],10) };
+  }
+  function resolveSlotParts(slot){
+    return parseSlotKey(slot && slot.key) || parseSlotLabelLegacy(slot && slot.label);
   }
 
   function addMinutes(hh, mm, add){
@@ -972,15 +996,16 @@
     return { hh: Math.floor(total/60), mm: total%60 };
   }
 
-  function buildMailContent(row, slotLabel, durationMin){
-    const p = parseSlotLabel(slotLabel);
+  // 手動送信（フォールバック）用のメール本文生成。Meetリンクはまだ発行されていないためプレースホルダー表示。
+  function buildMailContentLegacy(row, slot, durationMin){
+    const p = resolveSlotParts(slot);
     if(!p) return null;
     const end = addMinutes(p.hh, p.mm, durationMin);
     const startStr = `${pad(p.hh)}:${pad(p.mm)}`;
     const endStr = `${pad(end.hh)}:${pad(end.mm)}`;
     const isOnline = /Google Meet/i.test(row.format);
     const placeLine = isOnline ? '下記URLから入室' : '自習室';
-    const linkLine = isOnline ? `\n（オンラインの場合）接続リンク：〇〇〇` : '';
+    const linkLine = isOnline ? `\n（オンラインの場合）接続リンク：〇〇〇（自動送信の場合は自動でMeetリンクが入ります）` : '';
 
     const subject = '【DevelopersHub Conference 2027】面談日程のご連絡';
     const body =
@@ -1005,7 +1030,6 @@
 DevelopersHub Conference 2027 統括
 黒川稜真`;
 
-    // Slack向け（*太字*記法、件名なし、宛先はDM想定なので文言を少し調整）
     const slackText =
 `${row.name}さん
 
@@ -1029,9 +1053,9 @@ DevelopersHub Conference 2027 統括　黒川稜真`;
     return { subject, body, slackText, toEmail };
   }
 
-  function openMailModal(row, slotLabel){
+  function openMailModal(row, slot){
     let duration = 30;
-    renderMailModal(row, slotLabel, duration);
+    renderMailModal(row, slot, duration);
     mailModalOverlay.classList.add('show');
   }
 
@@ -1039,16 +1063,11 @@ DevelopersHub Conference 2027 統括　黒川稜真`;
     mailModalOverlay.classList.remove('show');
   }
 
-  function renderMailModal(row, slotLabel, duration){
-    const content = buildMailContent(row, slotLabel, duration);
-    if(!content){
-      closeMailModal();
-      alert('日時の解析に失敗しました。');
-      return;
-    }
+  function renderMailModal(row, slot, duration){
+    const isOnline = /Google Meet/i.test(row.format);
     mailModalBox.innerHTML = `
-      <h3>面談確定メールを作成</h3>
-      <p class="modal-sub">${escapeHtml(row.name)}さん / ${escapeHtml(slotLabel)} の内容でメール下書きを開きます。</p>
+      <h3>面談を確定する</h3>
+      <p class="modal-sub">${escapeHtml(row.name)}さん / ${escapeHtml(slot.label)}</p>
       <div class="mail-field">
         <span>面談時間</span>
         <div class="mail-duration-row">
@@ -1061,32 +1080,51 @@ DevelopersHub Conference 2027 統括　黒川稜真`;
           <span class="mail-time-preview" id="mailTimePreview"></span>
         </div>
       </div>
-      <div class="mail-field">
-        <span>宛先</span>
-        <input type="text" id="mailToInput" placeholder="メールアドレスが見つかりませんでした。手動で入力してください" value="${escapeHtml(content.toEmail)}">
-      </div>
+      <p class="auto-confirm-note">確定すると、Googleカレンダーへの登録${isOnline ? '（Google Meetリンクを自動発行）' : ''}・本人へのメール送信・Slack通知をまとめて自動で行います。</p>
+      <div class="auto-confirm-result" id="autoConfirmResult"></div>
       <div class="modal-actions">
         <button type="button" class="secondary" id="mailModalCancel">キャンセル</button>
-        <button type="button" class="secondary" id="slackCopyBtn">Slack用にコピー<span class="copy-note" id="slackCopyNote">コピーしました</span></button>
-        <button type="button" class="primary" id="mailModalOpen">Gmailで開く</button>
-      </div>`;
+        <button type="button" class="primary" id="autoConfirmBtn">この日程で確定する（自動送信）</button>
+      </div>
+      <details>
+        <summary>自動送信がうまくいかない場合は、手動で送信する</summary>
+        <div style="margin-top:14px;">
+          <div class="mail-field">
+            <span>宛先</span>
+            <input type="text" id="mailToInput" placeholder="メールアドレスが見つかりませんでした。手動で入力してください">
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="secondary" id="slackCopyBtn">Slack用にコピー<span class="copy-note" id="slackCopyNote">コピーしました</span></button>
+            <button type="button" class="secondary" id="mailModalOpen">Gmailで開く</button>
+          </div>
+        </div>
+      </details>`;
 
     const durSel = document.getElementById('mailDurationSelect');
     durSel.value = String(duration);
     const preview = document.getElementById('mailTimePreview');
     function updatePreview(){
       const d = parseInt(durSel.value, 10);
-      const p = parseSlotLabel(slotLabel);
+      const p = resolveSlotParts(slot);
+      if(!p) return;
       const end = addMinutes(p.hh, p.mm, d);
       preview.textContent = `${pad(p.hh)}:${pad(p.mm)} 〜 ${pad(end.hh)}:${pad(end.mm)}`;
     }
     updatePreview();
     durSel.addEventListener('change', updatePreview);
 
+    const toEmail = /\S+@\S+\.\S+/.test(row.contact) ? row.contact.trim() : '';
+    document.getElementById('mailToInput').value = toEmail;
+
     document.getElementById('mailModalCancel').addEventListener('click', closeMailModal);
+
+    document.getElementById('autoConfirmBtn').addEventListener('click', ()=>{
+      automateConfirm(row, slot, parseInt(durSel.value, 10));
+    });
+
     document.getElementById('slackCopyBtn').addEventListener('click', ()=>{
       const d = parseInt(durSel.value, 10);
-      const finalContent = buildMailContent(row, slotLabel, d);
+      const finalContent = buildMailContentLegacy(row, slot, d);
       navigator.clipboard.writeText(finalContent.slackText).then(()=>{
         const note = document.getElementById('slackCopyNote');
         note.classList.add('show');
@@ -1095,13 +1133,69 @@ DevelopersHub Conference 2027 統括　黒川稜真`;
     });
     document.getElementById('mailModalOpen').addEventListener('click', ()=>{
       const d = parseInt(durSel.value, 10);
-      const finalContent = buildMailContent(row, slotLabel, d);
-      const toEmail = document.getElementById('mailToInput').value.trim();
+      const finalContent = buildMailContentLegacy(row, slot, d);
+      const toEmailVal = document.getElementById('mailToInput').value.trim();
       // Gmailのウェブ版で新規作成画面を開く（別タブ）
-      const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(toEmail)}&su=${encodeURIComponent(finalContent.subject)}&body=${encodeURIComponent(finalContent.body)}`;
+      const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(toEmailVal)}&su=${encodeURIComponent(finalContent.subject)}&body=${encodeURIComponent(finalContent.body)}`;
       window.open(gmailUrl, '_blank');
       closeMailModal();
     });
+  }
+
+  // 面談確定の自動処理（カレンダー登録＋Meetリンク発行＋メール送信＋Slack通知）を
+  // GAS側にまとめて依頼する。GAS側の設定（Slack Webhook / Bot Token）に応じて
+  // 一部の通知が省略されることがあるため、結果を項目ごとに表示する。
+  async function automateConfirm(row, slot, duration){
+    const btn = document.getElementById('autoConfirmBtn');
+    const resultEl = document.getElementById('autoConfirmResult');
+    if(!btn || !resultEl) return;
+    btn.disabled = true;
+    const originalLabel = btn.textContent;
+    btn.textContent = '処理中…（カレンダー登録・メール送信・Slack通知）';
+    resultEl.style.display = 'none';
+
+    try{
+      const res = await fetch(WEBAPP_URL, {
+        method: 'POST',
+        headers: {'Content-Type': 'text/plain;charset=utf-8'},
+        body: JSON.stringify({
+          action: 'confirmInterview',
+          row: row.row,
+          name: row.name,
+          contact: row.contact,
+          format: row.format,
+          slotKey: slot.key || '',
+          slotLabel: slot.label || '',
+          durationMin: duration
+        })
+      });
+      const result = await res.json();
+      if(result.error){ throw new Error(result.error); }
+
+      const lines = [];
+      lines.push(result.calendarEventId
+        ? ('✅ カレンダー登録：完了' + (result.meetLink ? '（Google Meetリンク発行済み）' : ''))
+        : ('⚠️ カレンダー登録：失敗' + (result.calendarError ? `（${escapeHtml(result.calendarError)}）` : '')));
+      lines.push(result.emailSent
+        ? '✅ メール送信：完了'
+        : ('⚠️ メール送信：失敗' + (result.emailError ? `（${escapeHtml(result.emailError)}）` : '')));
+      if(result.slackDMSent){
+        lines.push('✅ Slack通知（本人へDM）：完了');
+      } else if(result.slackNotifySent){
+        lines.push('ℹ️ Slack：本人への自動DMは未設定のため、チームチャンネルへ手動送信の依頼を送りました');
+      } else {
+        lines.push('⚠️ Slack通知：送信できませんでした（Webhook/Bot Tokenの設定をご確認ください）');
+      }
+      resultEl.innerHTML = lines.join('<br>');
+      resultEl.style.display = 'block';
+      btn.textContent = '完了しました';
+      await loadResponses();
+    }catch(err){
+      resultEl.textContent = '自動処理に失敗しました：' + err.message + '　お手数ですが下記の「手動で送信する」からお送りください。';
+      resultEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = originalLabel;
+    }
   }
 
   function renderResponses(data){
@@ -1110,7 +1204,11 @@ DevelopersHub Conference 2027 統括　黒川稜真`;
     // ---- 人気の候補日時ランキング ----
     const counts = {};
     data.forEach(row=>{
-      (row.slots||[]).forEach(s=>{ counts[s] = (counts[s]||0) + 1; });
+      (row.slots||[]).forEach(s=>{
+        const label = (typeof s === 'string') ? s : (s && s.label) || '';
+        if(!label) return;
+        counts[label] = (counts[label]||0) + 1;
+      });
     });
     const ranking = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,10);
     const rankingBars = document.getElementById('rankingBars');
@@ -1146,10 +1244,16 @@ DevelopersHub Conference 2027 統括　黒川稜真`;
       tr.className = isDone ? 'done' : '';
       const dt = new Date(row.timestamp);
       const dtLabel = isNaN(dt) ? escapeHtml(row.timestamp) : `${dt.getFullYear()}/${dt.getMonth()+1}/${dt.getDate()} ${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
-      const slotsHtml = (row.slots||[]).map(s=>
-        `<a href="javascript:void(0)" class="slot-chip" data-row="${row.row}" data-slot="${escapeHtml(s)}" title="クリックしてこの日時で面談確定メールを作成">${escapeHtml(s)}</a>`
-      ).join('');
-      const statusHtml = `<button type="button" class="status-badge ${isDone?'status-done':'status-pending'}" data-row="${row.row}" data-status="${escapeHtml(row.status)}">${isDone ? '✓ 面接完了' : '対応待ち'}</button>`;
+      const slotsHtml = (row.slots||[]).map(s=>{
+        const label = (typeof s === 'string') ? s : (s && s.label) || '';
+        const key = (typeof s === 'string') ? '' : ((s && s.key) || '');
+        if(!label) return '';
+        return `<a href="javascript:void(0)" class="slot-chip" data-row="${row.row}" data-label="${escapeHtml(label)}" data-key="${escapeHtml(key)}" title="クリックしてこの日時で面談を自動確定">${escapeHtml(label)}</a>`;
+      }).join('');
+      const meetHtml = row.meetLink
+        ? `<a href="${escapeHtml(row.meetLink)}" target="_blank" rel="noopener" class="meet-link-badge">📹 Meetリンクを開く</a>`
+        : '';
+      const statusHtml = `<button type="button" class="status-badge ${isDone?'status-done':'status-pending'}" data-row="${row.row}" data-status="${escapeHtml(row.status)}">${isDone ? '✓ 面接完了' : '対応待ち'}</button>${meetHtml}`;
       const deleteHtml = `<button type="button" class="row-delete-btn" data-row="${row.row}">削除</button>`;
       tr.innerHTML = `<td class="ts">${dtLabel}</td><td>${escapeHtml(row.name)}</td><td>${escapeHtml(row.contact)}</td><td>${escapeHtml(row.format)}</td><td>${slotsHtml}</td><td>${statusHtml}</td><td>${deleteHtml}</td>`;
       tbody.appendChild(tr);
@@ -1168,7 +1272,7 @@ DevelopersHub Conference 2027 統括　黒川稜真`;
         const rowNum = Number(a.dataset.row);
         const row = lastResponses.find(r=>r.row === rowNum);
         if(!row) return;
-        openMailModal(row, a.dataset.slot);
+        openMailModal(row, { label: a.dataset.label, key: a.dataset.key });
       });
     });
   }
@@ -1297,10 +1401,13 @@ DevelopersHub Conference 2027 統括　黒川稜真`;
     errorMsg.style.display = 'none';
 
     const formatLabel = format==='google_meet' ? 'Google Meet（オンライン）' : '対面';
-    const slotLabels = Array.from(respTable.querySelectorAll('td.slot.selected'))
+    // 候補日時は「表示用ラベル」と「年を含む正確なキー」を両方保存する。
+    // キーはのちほど面談確定時（カレンダー登録・自動メール送信）に、年をまたぐ日程でも
+    // 正しい日付として扱うために使用する。
+    const slotObjs = Array.from(respTable.querySelectorAll('td.slot.selected'))
       .sort((a,b)=> a.dataset.key < b.dataset.key ? -1 : 1)
-      .map(td=>td.dataset.label);
-    pendingSubmission = { name, contact, format: formatLabel, slots: slotLabels };
+      .map(td=>({ label: td.dataset.label, key: td.dataset.key }));
+    pendingSubmission = { name, contact, format: formatLabel, slots: slotObjs };
 
     document.getElementById('mName').textContent = name;
     document.getElementById('mContact').textContent = contact;
