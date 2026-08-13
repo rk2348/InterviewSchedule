@@ -6,8 +6,8 @@
 // package.jsonの有無や設定に依存しないよう、CommonJS形式(module.exports)で書いています。
 
 module.exports = async function handler(req, res) {
-  // ここにご自身のGASウェブアプリのURLを入れてください
-  const GAS_URL = "https://script.google.com/macros/s/AKfycbwUcFJh0RhHx4wooQ1csdmrZ6UWWLswlx3YZoenKjcjUI8LvNJ5ezO_PYMp6ZYXJ0w/exec";
+  // ご自身のGASウェブアプリのURL
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbyGDCfj09yFPWzkpgJ8RU6UTXHFXvidi9lHXqdhmKtsSHFxTzeiFU49VHTPTJcX4een/exec";
 
   try {
     const targetUrl = new URL(GAS_URL);
