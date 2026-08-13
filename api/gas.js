@@ -7,7 +7,7 @@
 
 module.exports = async function handler(req, res) {
   // ご自身のGASウェブアプリのURL
-  const GAS_URL = "https://script.google.com/macros/s/AKfycbzpP9Qf0nlT_fYOSi2eKZofvG1gDgIEgqI2XMWUhSWG-qrkcXJ6vh-E_iTG-xgSjhZ8/exec";
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbyvWWVt5pyXhre0vyTywVVal7d5yRFptb2NvyMUnDTGINw52rHgr7JGpIYB0jfwM4JC/exec";
 
   try {
     const targetUrl = new URL(GAS_URL);
