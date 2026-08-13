@@ -374,7 +374,7 @@
 
     <section class="card">
       <div class="section-head"><span class="section-num">04</span><h2>回答一覧</h2></div>
-      <p class="grid-hint">Googleスプレッドシートに集まった回答を取得して表示します。候補日時のチップをクリックすると、その日時で面談を自動的に確定できます（カレンダー登録・Google Meetリンク発行・メール送信・Slack通知をまとめて実行します）。</p>
+      <p class="grid-hint">Googleスプレッドシートに集まった回答を取得して表示します。候補日時のチップをクリックすると、その日時で面談を自動的に確定できます（カレンダー登録・Google Meetリンク発行・メール送信をまとめて実行します）。</p>
       <div class="submit-row" style="justify-content:flex-start;">
         <button type="button" class="secondary" id="fetchResponsesBtn">回答を取得する</button>
         <button type="button" class="danger-outline" id="clearAllBtn">回答一覧をクリアにする</button>
@@ -1080,7 +1080,7 @@ DevelopersHub Conference 2027 統括　黒川稜真`;
           <span class="mail-time-preview" id="mailTimePreview"></span>
         </div>
       </div>
-      <p class="auto-confirm-note">確定すると、Googleカレンダーへの登録${isOnline ? '（Google Meetリンクを自動発行）' : ''}・本人へのメール送信・Slack通知をまとめて自動で行います。</p>
+      <p class="auto-confirm-note">確定すると、Googleカレンダーへの登録${isOnline ? '（Google Meetリンクを自動発行）' : ''}・本人へのメール送信を自動で行います。</p>
       <div class="auto-confirm-result" id="autoConfirmResult"></div>
       <div class="modal-actions">
         <button type="button" class="secondary" id="mailModalCancel">キャンセル</button>
@@ -1179,13 +1179,6 @@ DevelopersHub Conference 2027 統括　黒川稜真`;
       lines.push(result.emailSent
         ? '✅ メール送信：完了'
         : ('⚠️ メール送信：失敗' + (result.emailError ? `（${escapeHtml(result.emailError)}）` : '')));
-      if(result.slackDMSent){
-        lines.push('✅ Slack通知（本人へDM）：完了');
-      } else if(result.slackNotifySent){
-        lines.push('ℹ️ Slack：本人への自動DMは未設定のため、チームチャンネルへ手動送信の依頼を送りました');
-      } else {
-        lines.push('⚠️ Slack通知：送信できませんでした（Webhook/Bot Tokenの設定をご確認ください）');
-      }
       resultEl.innerHTML = lines.join('<br>');
       resultEl.style.display = 'block';
       btn.textContent = '完了しました';
