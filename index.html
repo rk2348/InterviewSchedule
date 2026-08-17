@@ -294,6 +294,40 @@
   .mail-field select{width:auto; min-width:120px;}
   .mail-duration-row{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
   .mail-duration-row .mail-time-preview{font-size:13.5px; color:var(--color-ink); font-family:'Shippori Mincho',serif;}
+
+  /* ---------- 確定済みスケジュール（タイムライン表示） ---------- */
+  .sched-legend{display:flex; gap:18px; flex-wrap:wrap; margin-bottom:16px; font-size:12px; color:var(--color-ink-soft);}
+  .sched-legend span{display:inline-flex; align-items:center; gap:6px;}
+  .sched-legend i{width:12px; height:12px; border-radius:3px; display:inline-block;}
+  .sched-legend i.online{background:var(--color-gold);}
+  .sched-legend i.inperson{background:var(--color-seal);}
+  .sched-empty{font-size:12.5px; color:var(--color-ink-soft); font-style:italic;}
+  .sched-wrap{border:1px solid var(--color-line); border-radius:var(--radius-m); overflow:hidden; background:#FCFBF8;}
+  .sched-hours{display:flex; padding:8px 14px 6px; border-bottom:1px solid var(--color-line); position:relative; font-size:10.5px; color:var(--color-ink-soft); font-family:'Shippori Mincho',serif;}
+  .sched-hours span{position:absolute; transform:translateX(-50%);}
+  .sched-day{display:flex; align-items:stretch; border-bottom:1px solid var(--color-line);}
+  .sched-day:last-child{border-bottom:none;}
+  .sched-day-label{
+    flex-shrink:0; width:96px; padding:14px 12px; font-size:12.5px; color:var(--color-ink);
+    border-right:1px solid var(--color-line); display:flex; flex-direction:column; justify-content:center; gap:2px;
+  }
+  .sched-day-label .d-num{font-family:'Shippori Mincho',serif; font-size:15px;}
+  .sched-day-label .d-count{font-size:11px; color:var(--color-ink-soft);}
+  .sched-track{position:relative; flex:1; min-height:52px; padding:8px 0;}
+  .sched-track::before{
+    content:""; position:absolute; inset:0; pointer-events:none;
+    background-image:linear-gradient(to right, var(--color-line) 1px, transparent 1px);
+    background-size:calc(100% / var(--sched-hour-count,1)) 100%;
+    opacity:.6;
+  }
+  .sched-block{
+    position:absolute; top:6px; bottom:6px; border-radius:6px; min-width:6px;
+    display:flex; align-items:center; overflow:hidden; padding:0 8px;
+    font-size:11.5px; color:#fff; white-space:nowrap; box-shadow:0 1px 3px rgba(28,35,51,0.18);
+    cursor:default;
+  }
+  .sched-block.online{background:var(--color-gold);}
+  .sched-block.inperson{background:var(--color-seal);}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
 </head>
@@ -331,6 +365,18 @@
         <label class="field"><span>終了時刻</span>
           <select id="rangeEndHour"></select>
         </label>
+      </div>
+      <div class="field-row" style="margin-top:18px; grid-template-columns:1fr 3fr;">
+        <label class="field"><span>面談開始時刻の間隔</span>
+          <select id="rangeInterval">
+            <option value="10">10分おき</option>
+            <option value="15">15分おき</option>
+            <option value="20">20分おき</option>
+            <option value="30">30分おき</option>
+            <option value="60">60分おき</option>
+          </select>
+        </label>
+        <p class="grid-hint" style="align-self:center; margin:0;">面談の「開始時刻」の候補を10分単位など細かく選べるようにしたい場合は、ここで間隔を短くしてください（面談の所要時間の設定ではありません。所要時間は、確定メール作成時に個別に選べます）。</p>
       </div>
       <div class="submit-row" style="justify-content:flex-start; margin-top:16px;">
         <button type="button" class="secondary" id="applyRangeBtn">この内容でカレンダーを更新する</button>
@@ -380,6 +426,16 @@
           <table class="resp-list-table" id="responseListTable"></table>
         </div>
       </div>
+    </section>
+
+    <section class="card">
+      <div class="section-head"><span class="section-num">05</span><h2>確定済みの面談スケジュール</h2></div>
+      <p class="grid-hint">回答一覧の候補日時をクリックしてメール（またはSlack）を作成すると、その日時が「確定」として記録され、ここに一覧表示されます。</p>
+      <div class="sched-legend">
+        <span><i class="online"></i>Google Meet（オンライン）</span>
+        <span><i class="inperson"></i>対面</span>
+      </div>
+      <div id="scheduleBlock"><p class="sched-empty">確定済みの面談はまだありません。「回答を取得する」を押すと最新の状態が表示されます。</p></div>
     </section>
   </div>
 
@@ -526,13 +582,14 @@
   const DEFAULT_DAYS = 14;
   const DEFAULT_START_HOUR = 9 * 60;
   const DEFAULT_END_HOUR = 19 * 60;
+  const DEFAULT_INTERVAL = 10;
   const dow = ['日','月','火','水','木','金','土'];
 
   function pad(n){return n.toString().padStart(2,'0');}
   function hmParts(mins){ return { h: Math.floor(mins/60), m: mins % 60 }; }
   function keyOf(d,mins){ const {h,m}=hmParts(mins); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(h)}${pad(m)}`; }
   function labelOf(d,mins){ const {h,m}=hmParts(mins); return `${d.getMonth()+1}/${d.getDate()}(${dow[d.getDay()]}) ${pad(h)}:${pad(m)}`; }
-  function timesRange(startMinutes, endMinutes){ const t=[]; for(let mins=startMinutes; mins<=endMinutes; mins+=30) t.push(mins); return t; }
+  function timesRange(startMinutes, endMinutes, interval){ const step = interval || 30; const t=[]; for(let mins=startMinutes; mins<=endMinutes; mins+=step) t.push(mins); return t; }
 
   function datesFrom(base, days){
     const arr=[];
@@ -650,7 +707,8 @@
     baseDate: (()=>{ const d = new Date(); d.setDate(d.getDate()+1); d.setHours(0,0,0,0); return d; })(),
     days: DEFAULT_DAYS,
     startHour: DEFAULT_START_HOUR,
-    endHour: DEFAULT_END_HOUR
+    endHour: DEFAULT_END_HOUR,
+    interval: DEFAULT_INTERVAL
   };
   let adminDates = [];
   let adminTimes = [];
@@ -674,7 +732,7 @@
 
   function rebuildAdminCalendar(){
     adminDates = datesFrom(adminState.baseDate, adminState.days);
-    adminTimes = timesRange(adminState.startHour, adminState.endHour);
+    adminTimes = timesRange(adminState.startHour, adminState.endHour, adminState.interval);
     adminNgSet.clear();
     renderTable(adminTable, adminDates, adminTimes, adminNgSet, 'admin');
     document.getElementById('linkBox').style.display = 'none'; // 設定が変わったので既存のリンクは無効表示に
@@ -682,6 +740,7 @@
 
   document.getElementById('rangeStartDate').value = toDateInputValue(adminState.baseDate);
   document.getElementById('rangeDays').value = adminState.days;
+  document.getElementById('rangeInterval').value = String(adminState.interval);
   populateHourSelects();
   rebuildAdminCalendar();
 
@@ -690,6 +749,7 @@
     const days = Math.min(60, Math.max(1, parseInt(document.getElementById('rangeDays').value, 10) || DEFAULT_DAYS));
     const sh = parseInt(document.getElementById('rangeStartHour').value, 10);
     const eh = parseInt(document.getElementById('rangeEndHour').value, 10);
+    const iv = parseInt(document.getElementById('rangeInterval').value, 10) || DEFAULT_INTERVAL;
 
     if(!sv || isNaN(sh) || isNaN(eh) || sh >= eh){
       alert('入力内容をご確認ください（開始時刻は終了時刻より前に設定してください）。');
@@ -700,6 +760,7 @@
     adminState.days = days;
     adminState.startHour = sh;
     adminState.endHour = eh;
+    adminState.interval = iv;
     document.getElementById('rangeDays').value = days;
     rebuildAdminCalendar();
   });
@@ -715,7 +776,8 @@
       d: adminState.days,
       a: adminState.startHour,
       b: adminState.endHour,
-      c: Array.from(adminNgSet)
+      c: Array.from(adminNgSet),
+      e: adminState.interval
     };
 
     try {
@@ -762,7 +824,7 @@
     adminView.style.display = 'none';
     respondentView.style.display = 'block';
     document.getElementById('previewNotice').style.display = 'block';
-    buildRespondentTable(adminState.baseDate, adminNgSet, adminState.days, adminState.startHour, adminState.endHour);
+    buildRespondentTable(adminState.baseDate, adminNgSet, adminState.days, adminState.startHour, adminState.endHour, adminState.interval);
   });
 
   document.getElementById('backToAdminBtn').addEventListener('click', ()=>{
@@ -972,7 +1034,16 @@
     return { hh: Math.floor(total/60), mm: total%60 };
   }
 
-  function buildMailContent(row, slotLabel, durationMin){
+  // 「2026-07-29_1400」のようなキーから年月日時分を取り出す
+  function parseSlotKey(key){
+    if(!key) return null;
+    const m = String(key).match(/^(\d{4})-(\d{2})-(\d{2})_(\d{2})(\d{2})$/);
+    if(!m) return null;
+    return { y: parseInt(m[1],10), month: parseInt(m[2],10), day: parseInt(m[3],10), hh: parseInt(m[4],10), mm: parseInt(m[5],10) };
+  }
+
+  function buildMailContent(row, slotObj, durationMin){
+    const slotLabel = slotObj.label;
     const p = parseSlotLabel(slotLabel);
     if(!p) return null;
     const end = addMinutes(p.hh, p.mm, durationMin);
@@ -1029,9 +1100,9 @@ DevelopersHub Conference 2027 統括　黒川稜真`;
     return { subject, body, slackText, toEmail };
   }
 
-  function openMailModal(row, slotLabel){
+  function openMailModal(row, slotObj){
     let duration = 30;
-    renderMailModal(row, slotLabel, duration);
+    renderMailModal(row, slotObj, duration);
     mailModalOverlay.classList.add('show');
   }
 
@@ -1039,8 +1110,8 @@ DevelopersHub Conference 2027 統括　黒川稜真`;
     mailModalOverlay.classList.remove('show');
   }
 
-  function renderMailModal(row, slotLabel, duration){
-    const content = buildMailContent(row, slotLabel, duration);
+  function renderMailModal(row, slotObj, duration){
+    const content = buildMailContent(row, slotObj, duration);
     if(!content){
       closeMailModal();
       alert('日時の解析に失敗しました。');
@@ -1048,7 +1119,7 @@ DevelopersHub Conference 2027 統括　黒川稜真`;
     }
     mailModalBox.innerHTML = `
       <h3>面談確定メールを作成</h3>
-      <p class="modal-sub">${escapeHtml(row.name)}さん / ${escapeHtml(slotLabel)} の内容でメール下書きを開きます。</p>
+      <p class="modal-sub">${escapeHtml(row.name)}さん / ${escapeHtml(slotObj.label)} の内容でメール下書きを開きます。</p>
       <div class="mail-field">
         <span>面談時間</span>
         <div class="mail-duration-row">
@@ -1076,7 +1147,7 @@ DevelopersHub Conference 2027 統括　黒川稜真`;
     const preview = document.getElementById('mailTimePreview');
     function updatePreview(){
       const d = parseInt(durSel.value, 10);
-      const p = parseSlotLabel(slotLabel);
+      const p = parseSlotLabel(slotObj.label);
       const end = addMinutes(p.hh, p.mm, d);
       preview.textContent = `${pad(p.hh)}:${pad(p.mm)} 〜 ${pad(end.hh)}:${pad(end.mm)}`;
     }
@@ -1086,31 +1157,134 @@ DevelopersHub Conference 2027 統括　黒川稜真`;
     document.getElementById('mailModalCancel').addEventListener('click', closeMailModal);
     document.getElementById('slackCopyBtn').addEventListener('click', ()=>{
       const d = parseInt(durSel.value, 10);
-      const finalContent = buildMailContent(row, slotLabel, d);
+      const finalContent = buildMailContent(row, slotObj, d);
       navigator.clipboard.writeText(finalContent.slackText).then(()=>{
         const note = document.getElementById('slackCopyNote');
         note.classList.add('show');
         setTimeout(()=>note.classList.remove('show'), 1800);
       });
+      confirmSlotOnServer(row, slotObj, d);
     });
     document.getElementById('mailModalOpen').addEventListener('click', ()=>{
       const d = parseInt(durSel.value, 10);
-      const finalContent = buildMailContent(row, slotLabel, d);
+      const finalContent = buildMailContent(row, slotObj, d);
       const toEmail = document.getElementById('mailToInput').value.trim();
       // Gmailのウェブ版で新規作成画面を開く（別タブ）
       const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(toEmail)}&su=${encodeURIComponent(finalContent.subject)}&body=${encodeURIComponent(finalContent.body)}`;
       window.open(gmailUrl, '_blank');
+      confirmSlotOnServer(row, slotObj, d);
       closeMailModal();
     });
   }
 
+  /* この日時を「確定」としてスプレッドシートに記録する（確定済みスケジュールに表示するため） */
+  function confirmSlotOnServer(row, slotObj, durationMin){
+    const p = parseSlotKey(slotObj.key);
+    if(!p){
+      // 古い回答データなど、正確な年が分からない候補日時は確定記録をスキップする
+      return;
+    }
+    const startIso = `${p.y}-${pad(p.month)}-${pad(p.day)}T${pad(p.hh)}:${pad(p.mm)}:00`;
+    const end = addMinutes(p.hh, p.mm, durationMin);
+    const label = `${p.month}/${p.day}(${dow[new Date(p.y,p.month-1,p.day).getDay()]}) ${pad(p.hh)}:${pad(p.mm)}〜${pad(end.hh)}:${pad(end.mm)}`;
+    fetch(WEBAPP_URL, {
+      method:'POST',
+      mode:'no-cors',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({
+        action:'confirmSlot',
+        row: row.row,
+        confirmedLabel: label,
+        confirmedAt: startIso,
+        confirmedDuration: durationMin
+      })
+    }).then(()=>loadResponses()).catch(()=>{});
+  }
+
+  /* ---------- 確定済みの面談スケジュール（タイムライン表示） ---------- */
+  function renderScheduleTimeline(data){
+    const wrap = document.getElementById('scheduleBlock');
+    const confirmed = data.filter(r => r.confirmedAt);
+    if(!confirmed.length){
+      wrap.innerHTML = '<p class="sched-empty">確定済みの面談はまだありません。回答一覧の候補日時をクリックしてメールを作成すると、ここに表示されます。</p>';
+      return;
+    }
+
+    // 日付ごとにグループ化
+    const byDate = {};
+    confirmed.forEach(r=>{
+      const dt = new Date(r.confirmedAt);
+      if(isNaN(dt)) return;
+      const dkey = `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}`;
+      (byDate[dkey] = byDate[dkey] || []).push({ row: r, start: dt, durationMin: Number(r.confirmedDuration)||30 });
+    });
+    const dateKeys = Object.keys(byDate).sort();
+    if(!dateKeys.length){
+      wrap.innerHTML = '<p class="sched-empty">確定済みの面談はまだありません。</p>';
+      return;
+    }
+
+    // 表示する時間帯の範囲を、実際の確定済み面談から自動計算（最低でも9:00〜19:00を確保）
+    let minMin = 9*60, maxMin = 19*60;
+    confirmed.forEach(r=>{
+      const dt = new Date(r.confirmedAt);
+      if(isNaN(dt)) return;
+      const startM = dt.getHours()*60 + dt.getMinutes();
+      const endM = startM + (Number(r.confirmedDuration)||30);
+      minMin = Math.min(minMin, startM - 30);
+      maxMin = Math.max(maxMin, endM + 30);
+    });
+    minMin = Math.max(0, Math.floor(minMin/60)*60);
+    maxMin = Math.min(24*60, Math.ceil(maxMin/60)*60);
+    const totalMin = maxMin - minMin;
+    const hourCount = totalMin / 60;
+
+    let hoursHtml = '';
+    for(let h=minMin; h<=maxMin; h+=60){
+      const pct = ((h-minMin)/totalMin)*100;
+      hoursHtml += `<span style="left:${pct}%;">${pad(Math.floor(h/60))}:00</span>`;
+    }
+
+    let daysHtml = '';
+    dateKeys.forEach(dkey=>{
+      const items = byDate[dkey].sort((a,b)=>a.start-b.start);
+      const sample = items[0].start;
+      const dLabel = `${sample.getMonth()+1}/${sample.getDate()}(${dow[sample.getDay()]})`;
+      let blocksHtml = '';
+      items.forEach(it=>{
+        const startM = it.start.getHours()*60 + it.start.getMinutes();
+        const left = Math.max(0, ((startM-minMin)/totalMin)*100);
+        const width = Math.max(1.5, (it.durationMin/totalMin)*100);
+        const isOnline = /Google Meet/i.test(it.row.format);
+        const timeLabel = `${pad(it.start.getHours())}:${pad(it.start.getMinutes())}`;
+        blocksHtml += `<div class="sched-block ${isOnline?'online':'inperson'}" style="left:${left}%; width:${width}%;" title="${escapeHtml(it.row.name)}さん / ${timeLabel}〜（約${it.durationMin}分） / ${escapeHtml(it.row.format)}">${escapeHtml(it.row.name)} ${timeLabel}</div>`;
+      });
+      daysHtml += `<div class="sched-day">
+        <div class="sched-day-label"><span class="d-num">${dLabel}</span><span class="d-count">${items.length}件</span></div>
+        <div class="sched-track" style="--sched-hour-count:${hourCount};">${blocksHtml}</div>
+      </div>`;
+    });
+
+    wrap.innerHTML = `<div class="sched-wrap">
+      <div class="sched-hours">${hoursHtml}</div>
+      ${daysHtml}
+    </div>`;
+  }
+
+  // 候補日時1件を {key,label} 形式に正規化する（古いデータ（文字列のみ）にも対応）
+  function normalizeSlot(s){
+    if(s && typeof s === 'object') return { key: s.key || null, label: s.label || '' };
+    return { key: null, label: String(s) };
+  }
+
   function renderResponses(data){
+    data.forEach(row=>{ row.slots = (row.slots||[]).map(normalizeSlot); });
     lastResponses = data;
 
     // ---- 人気の候補日時ランキング ----
     const counts = {};
     data.forEach(row=>{
-      (row.slots||[]).forEach(s=>{ counts[s] = (counts[s]||0) + 1; });
+      row.slots.forEach(s=>{ counts[s.label] = (counts[s.label]||0) + 1; });
     });
     const ranking = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,10);
     const rankingBars = document.getElementById('rankingBars');
@@ -1133,7 +1307,7 @@ DevelopersHub Conference 2027 統括　黒川稜真`;
     const table = document.getElementById('responseListTable');
     const tableBlock = document.getElementById('responseTableBlock');
     table.innerHTML = '';
-    if(!data.length){ tableBlock.style.display = 'none'; return; }
+    if(!data.length){ tableBlock.style.display = 'none'; renderScheduleTimeline(data); return; }
 
     const sorted = [...data].sort((a,b)=> new Date(b.timestamp) - new Date(a.timestamp));
     const thead = document.createElement('thead');
@@ -1146,8 +1320,8 @@ DevelopersHub Conference 2027 統括　黒川稜真`;
       tr.className = isDone ? 'done' : '';
       const dt = new Date(row.timestamp);
       const dtLabel = isNaN(dt) ? escapeHtml(row.timestamp) : `${dt.getFullYear()}/${dt.getMonth()+1}/${dt.getDate()} ${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
-      const slotsHtml = (row.slots||[]).map(s=>
-        `<a href="javascript:void(0)" class="slot-chip" data-row="${row.row}" data-slot="${escapeHtml(s)}" title="クリックしてこの日時で面談確定メールを作成">${escapeHtml(s)}</a>`
+      const slotsHtml = row.slots.map(s=>
+        `<a href="javascript:void(0)" class="slot-chip" data-row="${row.row}" data-key="${escapeHtml(s.key||'')}" data-label="${escapeHtml(s.label)}" title="クリックしてこの日時で面談確定メールを作成">${escapeHtml(s.label)}</a>`
       ).join('');
       const statusHtml = `<button type="button" class="status-badge ${isDone?'status-done':'status-pending'}" data-row="${row.row}" data-status="${escapeHtml(row.status)}">${isDone ? '✓ 面接完了' : '対応待ち'}</button>`;
       const deleteHtml = `<button type="button" class="row-delete-btn" data-row="${row.row}">削除</button>`;
@@ -1168,9 +1342,11 @@ DevelopersHub Conference 2027 統括　黒川稜真`;
         const rowNum = Number(a.dataset.row);
         const row = lastResponses.find(r=>r.row === rowNum);
         if(!row) return;
-        openMailModal(row, a.dataset.slot);
+        openMailModal(row, { key: a.dataset.key || null, label: a.dataset.label });
       });
     });
+
+    renderScheduleTimeline(data);
   }
 
   /* ================= 回答者ビュー ================= */
@@ -1198,9 +1374,9 @@ DevelopersHub Conference 2027 統括　黒川稜真`;
     });
   }
 
-  function buildRespondentTable(baseDate, ngSet, days, startHour, endHour){
+  function buildRespondentTable(baseDate, ngSet, days, startHour, endHour, interval){
     const respDates = datesFrom(baseDate, days);
-    const respTimes = timesRange(startHour, endHour);
+    const respTimes = timesRange(startHour, endHour, interval);
     renderTable(respTable, respDates, respTimes, ngSet, 'respondent', renderChips);
     renderChips();
   }
@@ -1227,7 +1403,7 @@ DevelopersHub Conference 2027 統括　黒川稜真`;
         const base = fromEpochDays(data.s);
         const ngSet = new Set(data.c);
         respondentView.style.display = 'block';
-        buildRespondentTable(base, ngSet, data.d, data.a, data.b);
+        buildRespondentTable(base, ngSet, data.d, data.a, data.b, data.e || 30);
       })
       .catch(e => {
         document.getElementById('loadingOverlay').remove();
@@ -1243,11 +1419,12 @@ DevelopersHub Conference 2027 統括　黒川稜真`;
     const endHour = params.has('b') ? parseInt(params.get('b'), 36) : DEFAULT_END_HOUR;
     const closedParam = params.get('c') || '';
     const ngSet = new Set(closedParam.split('.').filter(Boolean).map(v => parseInt(v, 36)));
+    const interval = params.has('e') ? parseInt(params.get('e'), 36) : 30;
 
     if (!isNaN(epochDays) && !isNaN(days) && !isNaN(startHour) && !isNaN(endHour)) {
       adminView.style.display = 'none';
       respondentView.style.display = 'block';
-      buildRespondentTable(base, ngSet, days, startHour, endHour);
+      buildRespondentTable(base, ngSet, days, startHour, endHour, isNaN(interval) ? 30 : interval);
     }
   }
 
@@ -1297,10 +1474,10 @@ DevelopersHub Conference 2027 統括　黒川稜真`;
     errorMsg.style.display = 'none';
 
     const formatLabel = format==='google_meet' ? 'Google Meet（オンライン）' : '対面';
-    const slotLabels = Array.from(respTable.querySelectorAll('td.slot.selected'))
+    const slotObjs = Array.from(respTable.querySelectorAll('td.slot.selected'))
       .sort((a,b)=> a.dataset.key < b.dataset.key ? -1 : 1)
-      .map(td=>td.dataset.label);
-    pendingSubmission = { name, contact, format: formatLabel, slots: slotLabels };
+      .map(td=>({ key: td.dataset.key, label: td.dataset.label }));
+    pendingSubmission = { name, contact, format: formatLabel, slots: slotObjs };
 
     document.getElementById('mName').textContent = name;
     document.getElementById('mContact').textContent = contact;
