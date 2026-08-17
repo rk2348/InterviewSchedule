@@ -718,8 +718,8 @@
     const endSel = document.getElementById('rangeEndHour');
     startSel.innerHTML = '';
     endSel.innerHTML = '';
-    // 0:00〜24:00 を30分刻みで生成
-    for(let mins=0; mins<=24*60; mins+=30){
+    // 0:00〜24:00 を10分刻みで生成（面談開始の候補を細かく選べるように）
+    for(let mins=0; mins<=24*60; mins+=10){
       const h = Math.floor(mins/60);
       const m = mins % 60;
       const label = `${pad(h)}:${pad(m)}`;
@@ -1050,28 +1050,30 @@
     const startStr = `${pad(p.hh)}:${pad(p.mm)}`;
     const endStr = `${pad(end.hh)}:${pad(end.mm)}`;
     const isOnline = /Google Meet/i.test(row.format);
-    const placeLine = isOnline ? '下記URLから入室' : '自習室';
-    const linkLine = isOnline ? `\n（オンラインの場合）接続リンク：〇〇〇` : '';
+    const placeBlockMail = isOnline
+      ? `■ 参加方法：下記URLからご参加ください\n■ 接続リンク：〇〇〇`
+      : `■ 場所：自習室`;
+    const placeBlockSlack = isOnline
+      ? `*参加方法*：下記URLからご参加ください\n*接続リンク*：〇〇〇`
+      : `*場所*：自習室`;
 
     const subject = '【DevelopersHub Conference 2027】面談日程のご連絡';
     const body =
 `${row.name}さん
 
-お疲れ様です！統括チームの黒川です。
+お疲れ様です。統括チームの黒川です。
 
-日程調整フォームへのご回答ありがとうございます！下記の日程で面談（1on1）を設定させていただきました。
+日程調整フォームへのご回答、ありがとうございます。下記の日程で面談（1on1）を確定させていただきましたので、ご連絡いたします。
 
-■ 日時：${p.month}月${p.day}日（${p.wd}）${startStr} 〜 ${endStr}（約${durationMin}分）
+■ 日時：${p.month}月${p.day}日（${p.wd}）${startStr}〜${endStr}（約${durationMin}分）
 ■ 形式：${row.format}
-■ 場所：${placeLine}${linkLine}
+${placeBlockMail}
 
-当日は雑談からのんびりと始めますので、特に事前の準備などは必要ありません。普段通りの感じで参加してもらえればと思います。
+当日は雑談からのんびり始めますので、特別な準備は不要です。普段どおりの雰囲気で参加していただければと思います。
 
-もし当日の都合が悪くなった場合や、日時の変更が必要な場合は、遠慮なくこのメールに返信するか、SlackのDMでお知らせください。
+もし当日ご都合が悪くなった場合や、日程変更が必要な場合は、お気軽にこのメールへの返信、またはSlackのDMでお知らせください。
 
-よろしくお願いします！
-
-
+どうぞよろしくお願いいたします。
 
 DevelopersHub Conference 2027 統括
 黒川稜真`;
@@ -1080,19 +1082,19 @@ DevelopersHub Conference 2027 統括
     const slackText =
 `${row.name}さん
 
-お疲れ様です！統括チームの黒川です。
+お疲れ様です。統括チームの黒川です。
 
-日程調整フォームへのご回答ありがとうございます！下記の日程で面談（1on1）を設定させていただきました。
+日程調整フォームへのご回答、ありがとうございます。下記の日程で面談（1on1）を確定させていただきましたので、ご連絡いたします。
 
-*日時*：${p.month}月${p.day}日（${p.wd}）${startStr} 〜 ${endStr}（約${durationMin}分）
+*日時*：${p.month}月${p.day}日（${p.wd}）${startStr}〜${endStr}（約${durationMin}分）
 *形式*：${row.format}
-*場所*：${placeLine}${linkLine}
+${placeBlockSlack}
 
-当日は雑談からのんびりと始めますので、特に事前の準備などは必要ありません。普段通りの感じで参加してもらえればと思います。
+当日は雑談からのんびり始めますので、特別な準備は不要です。普段どおりの雰囲気で参加していただければと思います。
 
-もし当日の都合が悪くなった場合や、日時の変更が必要な場合は、遠慮なくこのDMで、またはメールでお知らせください。
+もし当日ご都合が悪くなった場合や、日程変更が必要な場合は、お気軽にこのDM、またはメールでお知らせください。
 
-よろしくお願いします！
+どうぞよろしくお願いいたします。
 
 DevelopersHub Conference 2027 統括　黒川稜真`;
 
