@@ -334,8 +334,18 @@
 <body class="paper-texture">
 <div class="page">
 
+  <!-- ============ 無効なリンク/初期状態のゲート画面 ============ -->
+  <div id="gateView">
+    <header class="hero">
+      <div class="hero-text">
+        <h1>このリンクは無効です</h1>
+        <p>共有された日程調整リンク（URLの末尾に ?id=... が付いたもの）からアクセスしてください。URLに心当たりがない場合は、共有元にもう一度リンクをご確認ください。</p>
+      </div>
+    </header>
+  </div>
+
   <!-- ============ 管理者ビュー ============ -->
-  <div id="adminView">
+  <div id="adminView" style="display:none;">
     <header class="hero">
       <div class="hero-text">
         <div class="mode-badge">ADMIN SETUP</div>
@@ -567,6 +577,13 @@
      取得方法は返信メッセージの手順をご参照ください。 */
   const WEBAPP_URL = "/api/gas";
 
+  /* 【重要】管理画面(Adminビュー)にアクセスするための合言葉です。
+     このままでは第三者に推測されやすいため、必ずご自身だけが知っている文字列に変更してください。
+     変更後は、管理画面には
+       https://(あなたのドメイン)/?admin=あなたが設定した文字列
+     でアクセスしてください。 */
+  const ADMIN_ACCESS_KEY = "K.ryoma0718";
+
   function sendToSheet(data){
     if(!WEBAPP_URL || WEBAPP_URL.indexOf('ここに') === 0){
       return Promise.resolve({skipped:true});
@@ -700,6 +717,7 @@
   /* ================= 管理者ビュー ================= */
   const adminView = document.getElementById('adminView');
   const respondentView = document.getElementById('respondentView');
+  const gateView = document.getElementById('gateView');
   const adminTable = document.getElementById('adminTable');
   const adminNgSet = new Set(); // 対応不可スロットのインデックス（数値）を保持
 
@@ -1387,9 +1405,11 @@ DevelopersHub Conference 2027 統括　黒川稜真`;
   const params = new URLSearchParams(window.location.search);
   const idParam = params.get('id');
   const sParam = params.get('s'); // 従来の長URL互換性用
+  const adminParam = params.get('admin');
 
   if (idParam) {
     // === GASから設定を読み込む新しい方式 ===
+    gateView.style.display = 'none';
     adminView.style.display = 'none';
     document.body.insertAdjacentHTML('afterbegin', '<div id="loadingOverlay" style="text-align:center; padding:50px;">設定を読み込み中...</div>');
     
@@ -1398,8 +1418,7 @@ DevelopersHub Conference 2027 統括　黒川稜真`;
       .then(data => {
         document.getElementById('loadingOverlay').remove();
         if (data.error) {
-          alert('設定が見つからないか、有効期限切れです。');
-          adminView.style.display = 'block';
+          gateView.style.display = 'block';
           return;
         }
         const base = fromEpochDays(data.s);
@@ -1409,7 +1428,7 @@ DevelopersHub Conference 2027 統括　黒川稜真`;
       })
       .catch(e => {
         document.getElementById('loadingOverlay').remove();
-        alert('通信エラーが発生しました。');
+        gateView.style.display = 'block';
         console.error(e);
       });
   } else if (sParam) {
@@ -1424,11 +1443,17 @@ DevelopersHub Conference 2027 統括　黒川稜真`;
     const interval = params.has('e') ? parseInt(params.get('e'), 36) : 30;
 
     if (!isNaN(epochDays) && !isNaN(days) && !isNaN(startHour) && !isNaN(endHour)) {
+      gateView.style.display = 'none';
       adminView.style.display = 'none';
       respondentView.style.display = 'block';
       buildRespondentTable(base, ngSet, days, startHour, endHour, isNaN(interval) ? 30 : interval);
     }
+  } else if (adminParam && adminParam === ADMIN_ACCESS_KEY) {
+    // === 管理者用の合言葉が一致した場合のみAdminビューを表示 ===
+    gateView.style.display = 'none';
+    adminView.style.display = 'block';
   }
+  // ↑ いずれにも当てはまらない場合は、gateView（無効なリンクです）が表示されたままになる
 
   /* ---------- 面談形式 ---------- */
   const formatOptions = document.getElementById('formatOptions');
