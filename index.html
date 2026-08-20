@@ -339,7 +339,7 @@
     <header class="hero">
       <div class="hero-text">
         <h1>このリンクは無効です</h1>
-        <p>共有された日程調整リンク（URLの末尾に ?id=... が付いたもの）からアクセスしてください。URLに心当たりがない場合は、共有元にもう一度リンクをご確認ください。</p>
+        <p>共有された日程調整リンクからアクセスしてください。URLに心当たりがない場合は、共有元にもう一度リンクをご確認ください。</p>
       </div>
     </header>
   </div>
@@ -481,6 +481,20 @@
             <input type="text" id="contact" name="contact" placeholder="例）taro.yamada@example.com" required>
           </label>
         </div>
+        <div class="field-row" style="margin-top:18px;">
+          <label class="field"><span class="req">所属チーム</span>
+            <select id="team" name="team" required>
+              <option value="" disabled selected>選択してください</option>
+              <option value="統括">統括</option>
+              <option value="会場">会場</option>
+              <option value="当日進行">当日進行</option>
+              <option value="スポンサー">スポンサー</option>
+              <option value="会計">会計</option>
+              <option value="集客・広報">集客・広報</option>
+              <option value="デザイン">デザイン</option>
+            </select>
+          </label>
+        </div>
       </section>
 
       <section class="card">
@@ -533,6 +547,7 @@
       <table class="confirm-table">
         <tr><th>お名前</th><td id="cName"></td></tr>
         <tr><th>連絡先</th><td id="cContact"></td></tr>
+        <tr><th>所属チーム</th><td id="cTeam"></td></tr>
         <tr><th>面談形式</th><td id="cFormat"></td></tr>
         <tr><th>候補日時</th><td><div class="cchips" id="cSlots"></div></td></tr>
       </table>
@@ -548,6 +563,7 @@
       <table class="modal-table">
         <tr><th>お名前</th><td id="mName"></td></tr>
         <tr><th>連絡先</th><td id="mContact"></td></tr>
+        <tr><th>所属チーム</th><td id="mTeam"></td></tr>
         <tr><th>面談形式</th><td id="mFormat"></td></tr>
         <tr><th>候補日時</th><td><div class="mchips" id="mSlots"></div></td></tr>
       </table>
@@ -1331,7 +1347,7 @@ DevelopersHub Conference 2027 統括　黒川稜真`;
 
     const sorted = [...data].sort((a,b)=> new Date(b.timestamp) - new Date(a.timestamp));
     const thead = document.createElement('thead');
-    thead.innerHTML = '<tr><th>送信日時</th><th>お名前</th><th>連絡先</th><th>面談形式</th><th>候補日時</th><th>ステータス</th><th>操作</th></tr>';
+    thead.innerHTML = '<tr><th>送信日時</th><th>お名前</th><th>連絡先</th><th>チーム</th><th>面談形式</th><th>候補日時</th><th>ステータス</th><th>操作</th></tr>';
     table.appendChild(thead);
     const tbody = document.createElement('tbody');
     sorted.forEach(row=>{
@@ -1345,7 +1361,7 @@ DevelopersHub Conference 2027 統括　黒川稜真`;
       ).join('');
       const statusHtml = `<button type="button" class="status-badge ${isDone?'status-done':'status-pending'}" data-row="${row.row}" data-status="${escapeHtml(row.status)}">${isDone ? '✓ 面接完了' : '対応待ち'}</button>`;
       const deleteHtml = `<button type="button" class="row-delete-btn" data-row="${row.row}">削除</button>`;
-      tr.innerHTML = `<td class="ts">${dtLabel}</td><td>${escapeHtml(row.name)}</td><td>${escapeHtml(row.contact)}</td><td>${escapeHtml(row.format)}</td><td>${slotsHtml}</td><td>${statusHtml}</td><td>${deleteHtml}</td>`;
+      tr.innerHTML = `<td class="ts">${dtLabel}</td><td>${escapeHtml(row.name)}</td><td>${escapeHtml(row.contact)}</td><td>${escapeHtml(row.team||'')}</td><td>${escapeHtml(row.format)}</td><td>${slotsHtml}</td><td>${statusHtml}</td><td>${deleteHtml}</td>`;
       tbody.appendChild(tr);
     });
     table.appendChild(tbody);
@@ -1491,10 +1507,11 @@ DevelopersHub Conference 2027 統括　黒川稜真`;
     e.preventDefault();
     const name = document.getElementById('name').value.trim();
     const contact = document.getElementById('contact').value.trim();
+    const team = document.getElementById('team').value;
     const format = formatInput.value;
     const hasSelection = respTable.querySelector('td.slot.selected') !== null;
 
-    if(!name || !contact || !format || !hasSelection){
+    if(!name || !contact || !team || !format || !hasSelection){
       errorMsg.style.display = 'block';
       return;
     }
@@ -1504,10 +1521,11 @@ DevelopersHub Conference 2027 統括　黒川稜真`;
     const slotObjs = Array.from(respTable.querySelectorAll('td.slot.selected'))
       .sort((a,b)=> a.dataset.key < b.dataset.key ? -1 : 1)
       .map(td=>({ key: td.dataset.key, label: td.dataset.label }));
-    pendingSubmission = { name, contact, format: formatLabel, slots: slotObjs };
+    pendingSubmission = { name, contact, team, format: formatLabel, slots: slotObjs };
 
     document.getElementById('mName').textContent = name;
     document.getElementById('mContact').textContent = contact;
+    document.getElementById('mTeam').textContent = team;
     document.getElementById('mFormat').textContent = formatLabel;
     buildSlotChips(document.getElementById('mSlots'));
 
@@ -1522,6 +1540,7 @@ DevelopersHub Conference 2027 統括　黒川稜真`;
     modalOverlay.classList.remove('show');
     document.getElementById('cName').textContent = document.getElementById('mName').textContent;
     document.getElementById('cContact').textContent = document.getElementById('mContact').textContent;
+    document.getElementById('cTeam').textContent = document.getElementById('mTeam').textContent;
     document.getElementById('cFormat').textContent = document.getElementById('mFormat').textContent;
     buildSlotChips(document.getElementById('cSlots'));
     form.style.display = 'none';
