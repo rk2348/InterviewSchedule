@@ -96,8 +96,9 @@
   input[readonly]{background:#F3F1EA; color:var(--color-ink-soft);}
 
   /* ---------- Format cards ---------- */
-  .format-options{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
-  @media (max-width:600px){.format-options{grid-template-columns:1fr;}}
+  .format-options{display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px;}
+  @media (max-width:700px){.format-options{grid-template-columns:1fr 1fr;}}
+  @media (max-width:420px){.format-options{grid-template-columns:1fr;}}
   .format-card{
     position:relative; border:1px solid var(--color-line); border-radius:var(--radius-m);
     padding:18px 16px; cursor:pointer; display:flex; align-items:center; gap:14px;
@@ -489,6 +490,7 @@
               <option value="会場">会場</option>
               <option value="当日進行">当日進行</option>
               <option value="スポンサー">スポンサー</option>
+              <option value="開発">開発</option>
               <option value="会計">会計</option>
               <option value="集客・広報">集客・広報</option>
               <option value="デザイン">デザイン</option>
@@ -512,7 +514,14 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
               <path d="M4 21V8l8-5 8 5v13"/><path d="M9 21v-6h6v6"/><path d="M9 11h.01M15 11h.01M9 15h.01M15 15h.01"/>
             </svg>
-            <div><div class="fc-title">対面</div><div class="fc-sub">自習室にて実施</div></div>
+            <div><div class="fc-title">対面（自習室）</div><div class="fc-sub">自習室にて実施</div></div>
+          </div>
+          <div class="format-card" data-value="library_center" tabindex="0" role="radio" aria-checked="false">
+            <span class="check"></span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+              <path d="M4 19V6l6-3 6 3v13"/><path d="M20 19V9l-4-2"/><path d="M4 19h16"/>
+            </svg>
+            <div><div class="fc-title">対面（ライブラリセンター）</div><div class="fc-sub">ライブラリセンターにて実施</div></div>
           </div>
         </div>
         <input type="hidden" id="format" name="format" required>
@@ -1084,12 +1093,14 @@
     const startStr = `${pad(p.hh)}:${pad(p.mm)}`;
     const endStr = `${pad(end.hh)}:${pad(end.mm)}`;
     const isOnline = /Google Meet/i.test(row.format);
+    const isLibrary = /ライブラリセンター/.test(row.format);
+    const placeName = isLibrary ? 'ライブラリセンター' : '自習室';
     const placeBlockMail = isOnline
       ? `■ 参加方法：下記URLからご参加ください\n■ 接続リンク：〇〇〇`
-      : `■ 場所：自習室`;
+      : `■ 場所：${placeName}`;
     const placeBlockSlack = isOnline
       ? `*参加方法*：下記URLからご参加ください\n*接続リンク*：〇〇〇`
-      : `*場所*：自習室`;
+      : `*場所*：${placeName}`;
 
     const subject = '【DevelopersHub Conference 2027】面談日程のご連絡';
     const body =
@@ -1517,7 +1528,9 @@ DevelopersHub Conference 2027 統括　黒川稜真`;
     }
     errorMsg.style.display = 'none';
 
-    const formatLabel = format==='google_meet' ? 'Google Meet（オンライン）' : '対面';
+    const formatLabel = format==='google_meet' ? 'Google Meet（オンライン）'
+      : format==='library_center' ? '対面（ライブラリセンター）'
+      : '対面（自習室）';
     const slotObjs = Array.from(respTable.querySelectorAll('td.slot.selected'))
       .sort((a,b)=> a.dataset.key < b.dataset.key ? -1 : 1)
       .map(td=>({ key: td.dataset.key, label: td.dataset.label }));
