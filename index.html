@@ -226,13 +226,6 @@
     transition:border-color .15s, color .15s; white-space:nowrap;
   }
   .row-delete-btn:hover{border-color:var(--color-seal); color:var(--color-seal);}
-  .row-cancel-btn{
-    border:1px solid var(--color-gold); background:#fff; color:var(--color-gold);
-    font-size:11.5px; padding:5px 10px; border-radius:6px; cursor:pointer;
-    transition:background .15s, color .15s; white-space:nowrap;
-  }
-  .row-cancel-btn:hover{background:var(--color-gold); color:#fff;}
-  .confirmed-note{display:block; font-size:11px; color:var(--color-gold); margin-top:4px;}
 
   button.danger{
     font-family:'Noto Sans JP',sans-serif; font-size:13.5px; font-weight:500; color:#fff;
@@ -1003,71 +996,6 @@
     }
   }
 
-  /* ---------- 確定済みの面談を「面談できない（再調整）」に戻す（2段階確認） ---------- */
-  let unconfirmTarget = null;
-
-  function openUnconfirmModal(rowNum){
-    unconfirmTarget = lastResponses.find(r => r.row === rowNum);
-    if(!unconfirmTarget) return;
-    renderUnconfirmStep(1);
-    deleteModalOverlay.classList.add('show');
-  }
-
-  function closeUnconfirmModal(){
-    deleteModalOverlay.classList.remove('show');
-    unconfirmTarget = null;
-  }
-
-  function renderUnconfirmStep(step){
-    if(!unconfirmTarget) return;
-    if(step === 1){
-      deleteModalBox.innerHTML = `
-        <h3>この面談を「対応できない」にしますか？</h3>
-        <p class="modal-sub">確定済みの日時を取り消して、「対応待ち」の状態に戻します。候補日時の一覧はそのまま残りますので、別の日時であらためて面談確定メールを作成できます。</p>
-        <table class="modal-table">
-          <tr><th>お名前</th><td>${escapeHtml(unconfirmTarget.name)}</td></tr>
-          <tr><th>確定していた日時</th><td>${escapeHtml(unconfirmTarget.confirmedLabel||'')}</td></tr>
-        </table>
-        <div class="modal-actions">
-          <button type="button" class="secondary" id="unconfirmStep1Cancel">キャンセル</button>
-          <button type="button" class="danger" id="unconfirmStep1Next">次へ進む</button>
-        </div>`;
-      document.getElementById('unconfirmStep1Cancel').addEventListener('click', closeUnconfirmModal);
-      document.getElementById('unconfirmStep1Next').addEventListener('click', ()=>renderUnconfirmStep(2));
-    } else {
-      deleteModalBox.innerHTML = `
-        <h3>確定を取り消してよろしいですか？</h3>
-        <p class="modal-sub" style="color:var(--color-seal);">「${escapeHtml(unconfirmTarget.name)}」さんとの確定日時（${escapeHtml(unconfirmTarget.confirmedLabel||'')}）が取り消され、「対応待ち」に戻ります。相手への連絡（日程変更のご案内）は別途行ってください。</p>
-        <div class="modal-actions">
-          <button type="button" class="secondary" id="unconfirmStep2Cancel">キャンセル</button>
-          <button type="button" class="danger" id="unconfirmStep2Confirm">対応待ちに戻す</button>
-        </div>`;
-      document.getElementById('unconfirmStep2Cancel').addEventListener('click', closeUnconfirmModal);
-      document.getElementById('unconfirmStep2Confirm').addEventListener('click', executeUnconfirm);
-    }
-  }
-
-  async function executeUnconfirm(){
-    if(!unconfirmTarget) return;
-    const btn = document.getElementById('unconfirmStep2Confirm');
-    btn.disabled = true;
-    btn.textContent = '更新中…';
-    try{
-      await fetch(WEBAPP_URL, {
-        method:'POST',
-        mode:'no-cors', // 応答は読み取れないため、下の再取得で反映を確認する
-        headers:{'Content-Type':'text/plain;charset=utf-8'},
-        body: JSON.stringify({ action:'unconfirmSlot', row: unconfirmTarget.row, status:'未完了' })
-      });
-      closeUnconfirmModal();
-      await loadResponses();
-    }catch(err){
-      btn.disabled = false;
-      btn.textContent = '対応待ちに戻す';
-      alert('更新に失敗しました。通信環境をご確認のうえ、もう一度お試しください。');
-    }
-  }
-
   /* ---------- 回答一覧を全件クリア（2段階確認＋入力確認） ---------- */
   document.getElementById('clearAllBtn').addEventListener('click', openClearAllModal);
 
@@ -1442,11 +1370,9 @@ DevelopersHub Conference 2027 統括　黒川稜真`;
       const slotsHtml = row.slots.map(s=>
         `<a href="javascript:void(0)" class="slot-chip" data-row="${row.row}" data-key="${escapeHtml(s.key||'')}" data-label="${escapeHtml(s.label)}" title="クリックしてこの日時で面談確定メールを作成">${escapeHtml(s.label)}</a>`
       ).join('');
-      const statusHtml = `<button type="button" class="status-badge ${isDone?'status-done':'status-pending'}" data-row="${row.row}" data-status="${escapeHtml(row.status)}">${isDone ? '✓ 面接完了' : '対応待ち'}</button>`
-        + (row.confirmedAt && !isNaN(new Date(row.confirmedAt)) ? `<span class="confirmed-note">確定：${escapeHtml(row.confirmedLabel||'')}</span>` : '');
-      const cancelHtml = row.confirmedAt ? `<button type="button" class="row-cancel-btn" data-row="${row.row}">面談できない（再調整）</button>` : '';
+      const statusHtml = `<button type="button" class="status-badge ${isDone?'status-done':'status-pending'}" data-row="${row.row}" data-status="${escapeHtml(row.status)}">${isDone ? '✓ 面接完了' : '対応待ち'}</button>`;
       const deleteHtml = `<button type="button" class="row-delete-btn" data-row="${row.row}">削除</button>`;
-      tr.innerHTML = `<td class="ts">${dtLabel}</td><td>${escapeHtml(row.name)}</td><td>${escapeHtml(row.contact)}</td><td>${escapeHtml(row.team||'')}</td><td>${escapeHtml(row.format)}</td><td>${slotsHtml}</td><td>${statusHtml}</td><td>${cancelHtml}${cancelHtml?'<br>':''}${deleteHtml}</td>`;
+      tr.innerHTML = `<td class="ts">${dtLabel}</td><td>${escapeHtml(row.name)}</td><td>${escapeHtml(row.contact)}</td><td>${escapeHtml(row.team||'')}</td><td>${escapeHtml(row.format)}</td><td>${slotsHtml}</td><td>${statusHtml}</td><td>${deleteHtml}</td>`;
       tbody.appendChild(tr);
     });
     table.appendChild(tbody);
@@ -1457,9 +1383,6 @@ DevelopersHub Conference 2027 統括　黒川稜真`;
     });
     table.querySelectorAll('.row-delete-btn').forEach(btn=>{
       btn.addEventListener('click', ()=>openDeleteModal(Number(btn.dataset.row)));
-    });
-    table.querySelectorAll('.row-cancel-btn').forEach(btn=>{
-      btn.addEventListener('click', ()=>openUnconfirmModal(Number(btn.dataset.row)));
     });
     table.querySelectorAll('a.slot-chip').forEach(a=>{
       a.addEventListener('click', ()=>{
