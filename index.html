@@ -441,9 +441,9 @@
 
     <section class="card">
       <div class="section-head"><span class="section-num">05</span><h2>確定済みの面談スケジュール</h2></div>
-      <p class="grid-hint">回答一覧の候補日時をクリックしてメール（またはSlack）を作成すると、その日時が「確定」として記録され、ここに一覧表示されます。</p>
+      <p class="grid-hint">回答一覧の候補日時をクリックして面談確定メールを作成すると、その日時が「確定」として記録され、ここに一覧表示されます。なお、面談確定メールの送信自体は「Meeta」アプリから行うことを推奨します（このページでの操作は補助的なものです）。</p>
       <div class="sched-legend">
-        <span><i class="online"></i>Google Meet（オンライン）</span>
+        <span><i class="online"></i>オンライン</span>
         <span><i class="inperson"></i>対面</span>
       </div>
       <div id="scheduleBlock"><p class="sched-empty">確定済みの面談はまだありません。「回答を取得する」を押すと最新の状態が表示されます。</p></div>
@@ -482,46 +482,31 @@
             <input type="text" id="contact" name="contact" placeholder="例）taro.yamada@example.com" required>
           </label>
         </div>
-        <div class="field-row" style="margin-top:18px;">
-          <label class="field"><span class="req">所属チーム</span>
-            <select id="team" name="team" required>
-              <option value="" disabled selected>選択してください</option>
-              <option value="統括">統括</option>
-              <option value="会場">会場</option>
-              <option value="当日進行">当日進行</option>
-              <option value="スポンサー">スポンサー</option>
-              <option value="開発">開発</option>
-              <option value="会計">会計</option>
-              <option value="集客・広報">集客・広報</option>
-              <option value="デザイン">デザイン</option>
-            </select>
-          </label>
-        </div>
       </section>
 
       <section class="card">
         <div class="section-head"><span class="section-num">02</span><h2>面談形式</h2></div>
         <div class="format-options" id="formatOptions">
-          <div class="format-card" data-value="google_meet" tabindex="0" role="radio" aria-checked="false">
-            <span class="check"></span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-              <rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 9.5 22 6v12l-6-3.5"/>
-            </svg>
-            <div><div class="fc-title">Google Meet</div><div class="fc-sub">オンラインで実施</div></div>
-          </div>
-          <div class="format-card" data-value="in_person" tabindex="0" role="radio" aria-checked="false">
+          <div class="format-card" data-value="対面" tabindex="0" role="radio" aria-checked="false">
             <span class="check"></span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
               <path d="M4 21V8l8-5 8 5v13"/><path d="M9 21v-6h6v6"/><path d="M9 11h.01M15 11h.01M9 15h.01M15 15h.01"/>
             </svg>
-            <div><div class="fc-title">対面（自習室）</div><div class="fc-sub">自習室にて実施</div></div>
+            <div><div class="fc-title">対面</div><div class="fc-sub">会場にて実施</div></div>
           </div>
-          <div class="format-card" data-value="library_center" tabindex="0" role="radio" aria-checked="false">
+          <div class="format-card" data-value="オンライン" tabindex="0" role="radio" aria-checked="false">
             <span class="check"></span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-              <path d="M4 19V6l6-3 6 3v13"/><path d="M20 19V9l-4-2"/><path d="M4 19h16"/>
+              <rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 9.5 22 6v12l-6-3.5"/>
             </svg>
-            <div><div class="fc-title">対面（ライブラリセンター）</div><div class="fc-sub">ライブラリセンターにて実施</div></div>
+            <div><div class="fc-title">オンライン</div><div class="fc-sub">Web会議にて実施</div></div>
+          </div>
+          <div class="format-card" data-value="電話" tabindex="0" role="radio" aria-checked="false">
+            <span class="check"></span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+              <path d="M4 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L14 13l5 2v4a2 2 0 0 1-2 2A15 15 0 0 1 4 6a2 2 0 0 1 2-2z"/>
+            </svg>
+            <div><div class="fc-title">電話</div><div class="fc-sub">お電話にて実施</div></div>
           </div>
         </div>
         <input type="hidden" id="format" name="format" required>
@@ -556,7 +541,6 @@
       <table class="confirm-table">
         <tr><th>お名前</th><td id="cName"></td></tr>
         <tr><th>連絡先</th><td id="cContact"></td></tr>
-        <tr><th>所属チーム</th><td id="cTeam"></td></tr>
         <tr><th>面談形式</th><td id="cFormat"></td></tr>
         <tr><th>候補日時</th><td><div class="cchips" id="cSlots"></div></td></tr>
       </table>
@@ -572,7 +556,6 @@
       <table class="modal-table">
         <tr><th>お名前</th><td id="mName"></td></tr>
         <tr><th>連絡先</th><td id="mContact"></td></tr>
-        <tr><th>所属チーム</th><td id="mTeam"></td></tr>
         <tr><th>面談形式</th><td id="mFormat"></td></tr>
         <tr><th>候補日時</th><td><div class="mchips" id="mSlots"></div></td></tr>
       </table>
@@ -1092,59 +1075,34 @@
     const end = addMinutes(p.hh, p.mm, durationMin);
     const startStr = `${pad(p.hh)}:${pad(p.mm)}`;
     const endStr = `${pad(end.hh)}:${pad(end.mm)}`;
-    const isOnline = /Google Meet/i.test(row.format);
-    const isLibrary = /ライブラリセンター/.test(row.format);
-    const placeName = isLibrary ? 'ライブラリセンター' : '自習室';
+    const isOnline = row.format === 'オンライン';
+    const isPhone = row.format === '電話';
     const placeBlockMail = isOnline
       ? `■ 参加方法：下記URLからご参加ください\n■ 接続リンク：〇〇〇`
-      : `■ 場所：${placeName}`;
-    const placeBlockSlack = isOnline
-      ? `*参加方法*：下記URLからご参加ください\n*接続リンク*：〇〇〇`
-      : `*場所*：${placeName}`;
+      : isPhone
+        ? `■ こちらから指定のお電話番号にご連絡いたします。`
+        : `■ 場所：〇〇〇`;
 
-    const subject = '【DevelopersHub Conference 2027】面談日程のご連絡';
+    const subject = '面談日程のご連絡';
     const body =
-`${row.name}さん
+`${row.name}様
 
-お疲れ様です。統括チームの黒川です。
+お世話になっております。採用担当の【担当者名】です。
 
-日程調整フォームへのご回答、ありがとうございます。下記の日程で面談（1on1）を確定させていただきましたので、ご連絡いたします。
+日程調整フォームへのご回答、ありがとうございます。下記の日程で面談を確定いたしましたので、ご連絡いたします。
 
 ■ 日時：${p.month}月${p.day}日（${p.wd}）${startStr}〜${endStr}（約${durationMin}分）
 ■ 形式：${row.format}
 ${placeBlockMail}
 
-当日は雑談からのんびり始めますので、特別な準備は不要です。普段どおりの雰囲気で参加していただければと思います。
-
-もし当日ご都合が悪くなった場合や、日程変更が必要な場合は、お気軽にこのメールへの返信、またはSlackのDMでお知らせください。
+もし当日ご都合が悪くなった場合や、日程変更が必要な場合は、お気軽にこのメールへの返信にてお知らせください。
 
 どうぞよろしくお願いいたします。
 
-DevelopersHub Conference 2027 統括
-黒川稜真`;
-
-    // Slack向け（*太字*記法、件名なし、宛先はDM想定なので文言を少し調整）
-    const slackText =
-`${row.name}さん
-
-お疲れ様です。統括チームの黒川です。
-
-日程調整フォームへのご回答、ありがとうございます。下記の日程で面談（1on1）を確定させていただきましたので、ご連絡いたします。
-
-*日時*：${p.month}月${p.day}日（${p.wd}）${startStr}〜${endStr}（約${durationMin}分）
-*形式*：${row.format}
-${placeBlockSlack}
-
-当日は雑談からのんびり始めますので、特別な準備は不要です。普段どおりの雰囲気で参加していただければと思います。
-
-もし当日ご都合が悪くなった場合や、日程変更が必要な場合は、お気軽にこのDM、またはメールでお知らせください。
-
-どうぞよろしくお願いいたします。
-
-DevelopersHub Conference 2027 統括　黒川稜真`;
+【会社名】採用担当　【担当者名】`;
 
     const toEmail = /\S+@\S+\.\S+/.test(row.contact) ? row.contact.trim() : '';
-    return { subject, body, slackText, toEmail };
+    return { subject, body, toEmail };
   }
 
   function openMailModal(row, slotObj){
@@ -1185,7 +1143,7 @@ DevelopersHub Conference 2027 統括　黒川稜真`;
       </div>
       <div class="modal-actions">
         <button type="button" class="secondary" id="mailModalCancel">キャンセル</button>
-        <button type="button" class="secondary" id="slackCopyBtn">Slack用にコピー<span class="copy-note" id="slackCopyNote">コピーしました</span></button>
+        <button type="button" class="secondary" id="bodyCopyBtn">本文をコピー<span class="copy-note" id="bodyCopyNote">コピーしました</span></button>
         <button type="button" class="primary" id="mailModalOpen">Gmailで開く</button>
       </div>`;
 
@@ -1202,11 +1160,11 @@ DevelopersHub Conference 2027 統括　黒川稜真`;
     durSel.addEventListener('change', updatePreview);
 
     document.getElementById('mailModalCancel').addEventListener('click', closeMailModal);
-    document.getElementById('slackCopyBtn').addEventListener('click', ()=>{
+    document.getElementById('bodyCopyBtn').addEventListener('click', ()=>{
       const d = parseInt(durSel.value, 10);
       const finalContent = buildMailContent(row, slotObj, d);
-      navigator.clipboard.writeText(finalContent.slackText).then(()=>{
-        const note = document.getElementById('slackCopyNote');
+      navigator.clipboard.writeText(finalContent.body).then(()=>{
+        const note = document.getElementById('bodyCopyNote');
         note.classList.add('show');
         setTimeout(()=>note.classList.remove('show'), 1800);
       });
@@ -1302,7 +1260,7 @@ DevelopersHub Conference 2027 統括　黒川稜真`;
         const startM = it.start.getHours()*60 + it.start.getMinutes();
         const left = Math.max(0, ((startM-minMin)/totalMin)*100);
         const width = Math.max(1.5, (it.durationMin/totalMin)*100);
-        const isOnline = /Google Meet/i.test(it.row.format);
+        const isOnline = it.row.format === 'オンライン';
         const timeLabel = `${pad(it.start.getHours())}:${pad(it.start.getMinutes())}`;
         blocksHtml += `<div class="sched-block ${isOnline?'online':'inperson'}" style="left:${left}%; width:${width}%;" title="${escapeHtml(it.row.name)}さん / ${timeLabel}〜（約${it.durationMin}分） / ${escapeHtml(it.row.format)}">${escapeHtml(it.row.name)} ${timeLabel}</div>`;
       });
@@ -1358,7 +1316,7 @@ DevelopersHub Conference 2027 統括　黒川稜真`;
 
     const sorted = [...data].sort((a,b)=> new Date(b.timestamp) - new Date(a.timestamp));
     const thead = document.createElement('thead');
-    thead.innerHTML = '<tr><th>送信日時</th><th>お名前</th><th>連絡先</th><th>チーム</th><th>面談形式</th><th>候補日時</th><th>ステータス</th><th>操作</th></tr>';
+    thead.innerHTML = '<tr><th>送信日時</th><th>お名前</th><th>連絡先</th><th>面談形式</th><th>候補日時</th><th>ステータス</th><th>操作</th></tr>';
     table.appendChild(thead);
     const tbody = document.createElement('tbody');
     sorted.forEach(row=>{
@@ -1372,7 +1330,7 @@ DevelopersHub Conference 2027 統括　黒川稜真`;
       ).join('');
       const statusHtml = `<button type="button" class="status-badge ${isDone?'status-done':'status-pending'}" data-row="${row.row}" data-status="${escapeHtml(row.status)}">${isDone ? '✓ 面接完了' : '対応待ち'}</button>`;
       const deleteHtml = `<button type="button" class="row-delete-btn" data-row="${row.row}">削除</button>`;
-      tr.innerHTML = `<td class="ts">${dtLabel}</td><td>${escapeHtml(row.name)}</td><td>${escapeHtml(row.contact)}</td><td>${escapeHtml(row.team||'')}</td><td>${escapeHtml(row.format)}</td><td>${slotsHtml}</td><td>${statusHtml}</td><td>${deleteHtml}</td>`;
+      tr.innerHTML = `<td class="ts">${dtLabel}</td><td>${escapeHtml(row.name)}</td><td>${escapeHtml(row.contact)}</td><td>${escapeHtml(row.format)}</td><td>${slotsHtml}</td><td>${statusHtml}</td><td>${deleteHtml}</td>`;
       tbody.appendChild(tr);
     });
     table.appendChild(tbody);
@@ -1518,27 +1476,24 @@ DevelopersHub Conference 2027 統括　黒川稜真`;
     e.preventDefault();
     const name = document.getElementById('name').value.trim();
     const contact = document.getElementById('contact').value.trim();
-    const team = document.getElementById('team').value;
     const format = formatInput.value;
     const hasSelection = respTable.querySelector('td.slot.selected') !== null;
 
-    if(!name || !contact || !team || !format || !hasSelection){
+    if(!name || !contact || !format || !hasSelection){
       errorMsg.style.display = 'block';
       return;
     }
     errorMsg.style.display = 'none';
 
-    const formatLabel = format==='google_meet' ? 'Google Meet（オンライン）'
-      : format==='library_center' ? '対面（ライブラリセンター）'
-      : '対面（自習室）';
+    // 面談形式は「対面」「オンライン」「電話」のいずれか(値そのものが表示ラベル)
+    const formatLabel = format;
     const slotObjs = Array.from(respTable.querySelectorAll('td.slot.selected'))
       .sort((a,b)=> a.dataset.key < b.dataset.key ? -1 : 1)
       .map(td=>({ key: td.dataset.key, label: td.dataset.label }));
-    pendingSubmission = { name, contact, team, format: formatLabel, slots: slotObjs };
+    pendingSubmission = { name, contact, format: formatLabel, slots: slotObjs };
 
     document.getElementById('mName').textContent = name;
     document.getElementById('mContact').textContent = contact;
-    document.getElementById('mTeam').textContent = team;
     document.getElementById('mFormat').textContent = formatLabel;
     buildSlotChips(document.getElementById('mSlots'));
 
@@ -1553,7 +1508,6 @@ DevelopersHub Conference 2027 統括　黒川稜真`;
     modalOverlay.classList.remove('show');
     document.getElementById('cName').textContent = document.getElementById('mName').textContent;
     document.getElementById('cContact').textContent = document.getElementById('mContact').textContent;
-    document.getElementById('cTeam').textContent = document.getElementById('mTeam').textContent;
     document.getElementById('cFormat').textContent = document.getElementById('mFormat').textContent;
     buildSlotChips(document.getElementById('cSlots'));
     form.style.display = 'none';
