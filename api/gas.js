@@ -8,6 +8,13 @@
 // 【重要】このファイルはVercelのプロジェクトの api/gas.js に置いてください。
 // Google Apps Scriptの「Code.gs」とは別物です。間違えて入れ替えると
 // Apps Script側で「ReferenceError: module is not defined」というエラーになります。
+//
+// 【修正メモ】
+// Google Apps Scriptの /exec URL は、リクエストを受けると必ず一度302リダイレクトを
+// 返す仕組みになっています。ここで redirect:'follow'（自動追従）を使うと、
+// POSTリクエストがリダイレクト先ではGETに変換されてしまい、送信したデータ（本文）が
+// 失われてしまう問題がありました（＝共有リンク発行や回答保存が正しく動かない原因）。
+// そのため、リダイレクトはメソッドとボディを保持したまま自前で追いかけるようにしています。
 
 module.exports = async function handler(req, res) {
   // ご自身のGASウェブアプリのURL
@@ -24,7 +31,7 @@ module.exports = async function handler(req, res) {
 
     const fetchOptions = {
       method: req.method,
-      redirect: 'follow',
+      redirect: 'manual', // 自動追従させず、下のループで自前でリダイレクトを処理する
     };
 
     if (req.method === 'POST') {
@@ -33,7 +40,20 @@ module.exports = async function handler(req, res) {
       fetchOptions.body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
     }
 
-    const gasRes = await fetch(targetUrl.toString(), fetchOptions);
+    // GASの302リダイレクトを、メソッドとボディを保持したまま最大5回まで自前で追いかける
+    let currentUrl = targetUrl.toString();
+    let gasRes;
+    for (let i = 0; i < 5; i++) {
+      gasRes = await fetch(currentUrl, fetchOptions);
+      if ([301, 302, 303, 307, 308].includes(gasRes.status)) {
+        const location = gasRes.headers.get('location');
+        if (!location) break;
+        currentUrl = new URL(location, currentUrl).toString();
+        continue;
+      }
+      break;
+    }
+
     const text = await gasRes.text();
 
     res.status(200);
