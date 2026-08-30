@@ -4,10 +4,14 @@
 // (サーバー同士の通信にはCORSの制約が無いため)
 //
 // package.jsonの有無や設定に依存しないよう、CommonJS形式(module.exports)で書いています。
+//
+// 【重要】このファイルはVercelのプロジェクトの api/gas.js に置いてください。
+// Google Apps Scriptの「Code.gs」とは別物です。間違えて入れ替えると
+// Apps Script側で「ReferenceError: module is not defined」というエラーになります。
 
 module.exports = async function handler(req, res) {
   // ご自身のGASウェブアプリのURL
-  const GAS_URL = "https://script.google.com/macros/s/AKfycbyvWWVt5pyXhre0vyTywVVal7d5yRFptb2NvyMUnDTGINw52rHgr7JGpIYB0jfwM4JC/exec";
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbz9EK_dBdiUl56G1kFK11nMTczXNgzBfD1t2NBv-D973gLTOAAgiMK6EEDA7otR3nJI/exec";
 
   try {
     const targetUrl = new URL(GAS_URL);
