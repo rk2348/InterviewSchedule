@@ -96,8 +96,7 @@
   input[readonly]{background:#F3F1EA; color:var(--color-ink-soft);}
 
   /* ---------- Format cards ---------- */
-  .format-options{display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px;}
-  @media (max-width:700px){.format-options{grid-template-columns:1fr 1fr;}}
+  .format-options{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
   @media (max-width:420px){.format-options{grid-template-columns:1fr;}}
   .format-card{
     position:relative; border:1px solid var(--color-line); border-radius:var(--radius-m);
@@ -499,14 +498,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
               <rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 9.5 22 6v12l-6-3.5"/>
             </svg>
-            <div><div class="fc-title">オンライン</div><div class="fc-sub">Web会議にて実施</div></div>
-          </div>
-          <div class="format-card" data-value="電話" tabindex="0" role="radio" aria-checked="false">
-            <span class="check"></span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-              <path d="M4 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L14 13l5 2v4a2 2 0 0 1-2 2A15 15 0 0 1 4 6a2 2 0 0 1 2-2z"/>
-            </svg>
-            <div><div class="fc-title">電話</div><div class="fc-sub">お電話にて実施</div></div>
+            <div><div class="fc-title">オンライン</div><div class="fc-sub">Google Meetにて実施</div></div>
           </div>
         </div>
         <input type="hidden" id="format" name="format" required>
@@ -815,11 +807,11 @@
         body: JSON.stringify({ action: 'saveConfig', config: configData })
       });
       const result = await res.json();
-      
+
       if (result.success && result.id) {
         const url = new URL(window.location.href.split('?')[0]);
         url.searchParams.set('id', result.id); // ?id=xxxxx を付与
-        
+
         const linkBox = document.getElementById('linkBox');
         const linkOutput = document.getElementById('linkOutput');
         linkOutput.value = url.toString();
@@ -1076,12 +1068,9 @@
     const startStr = `${pad(p.hh)}:${pad(p.mm)}`;
     const endStr = `${pad(end.hh)}:${pad(end.mm)}`;
     const isOnline = row.format === 'オンライン';
-    const isPhone = row.format === '電話';
     const placeBlockMail = isOnline
-      ? `■ 参加方法：下記URLからご参加ください\n■ 接続リンク：〇〇〇`
-      : isPhone
-        ? `■ こちらから指定のお電話番号にご連絡いたします。`
-        : `■ 場所：〇〇〇`;
+      ? `■ 参加方法：下記URLからご参加ください\n■ 接続リンク（Google Meet）：〇〇〇`
+      : `■ 場所：〇〇〇`;
 
     const subject = '面談日程のご連絡';
     const body =
@@ -1397,7 +1386,7 @@ ${placeBlockMail}
     gateView.style.display = 'none';
     adminView.style.display = 'none';
     document.body.insertAdjacentHTML('afterbegin', '<div id="loadingOverlay" style="text-align:center; padding:50px;">設定を読み込み中...</div>');
-    
+
     fetch(`${WEBAPP_URL}?action=getConfig&id=${idParam}`)
       .then(res => res.json())
       .then(data => {
@@ -1485,7 +1474,7 @@ ${placeBlockMail}
     }
     errorMsg.style.display = 'none';
 
-    // 面談形式は「対面」「オンライン」「電話」のいずれか(値そのものが表示ラベル)
+    // 面談形式は「対面」「オンライン」のいずれか(値そのものが表示ラベル)
     const formatLabel = format;
     const slotObjs = Array.from(respTable.querySelectorAll('td.slot.selected'))
       .sort((a,b)=> a.dataset.key < b.dataset.key ? -1 : 1)
