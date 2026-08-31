@@ -11,10 +11,14 @@
 //
 // 【修正メモ】
 // Google Apps Scriptの /exec URL は、リクエストを受けると必ず一度302リダイレクトを
-// 返す仕組みになっています。ここで redirect:'follow'（自動追従）を使うと、
-// POSTリクエストがリダイレクト先ではGETに変換されてしまい、送信したデータ（本文）が
-// 失われてしまう問題がありました（＝共有リンク発行や回答保存が正しく動かない原因）。
-// そのため、リダイレクトはメソッドとボディを保持したまま自前で追いかけるようにしています。
+// 返す仕組みになっています。この最初のリクエストの時点で doGet/doPost の処理（スプレッド
+// シートへの保存など）はすでに実行されており、302リダイレクトは「実行結果を取得するための
+// 転送先」を案内しているだけです。そのため、
+//   1. 最初のリクエストは元のメソッド（GET/POST）とボディをそのまま送る
+//   2. リダイレクト先へは、結果を受け取るだけのGETでアクセスする（ボディの再送はしない）
+// という形にする必要があります。以前のコードは redirect:'follow'（自動追従）を使っていた
+// ため、POSTがリダイレクト先でGETに変換されてボディが失われ、さらにその後の修正でも
+// リダイレクト先に誤ってPOSTボディを送り直してしまっていました。
 
 module.exports = async function handler(req, res) {
   // ご自身のGASウェブアプリのURL
@@ -29,26 +33,25 @@ module.exports = async function handler(req, res) {
       targetUrl.searchParams.set(key, value);
     });
 
-    const fetchOptions = {
-      method: req.method,
-      redirect: 'manual', // 自動追従させず、下のループで自前でリダイレクトを処理する
-    };
-
+    // 最初のリクエストだけ、元のメソッド・ボディを使う
+    let currentUrl = targetUrl.toString();
+    let currentOptions = { method: req.method, redirect: 'manual' };
     if (req.method === 'POST') {
-      fetchOptions.headers = { 'Content-Type': 'text/plain;charset=utf-8' };
+      currentOptions.headers = { 'Content-Type': 'text/plain;charset=utf-8' };
       // VercelはContent-Type: text/plainのボディを文字列としてreq.bodyに渡してくれる
-      fetchOptions.body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+      currentOptions.body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
     }
 
-    // GASの302リダイレクトを、メソッドとボディを保持したまま最大5回まで自前で追いかける
-    let currentUrl = targetUrl.toString();
     let gasRes;
     for (let i = 0; i < 5; i++) {
-      gasRes = await fetch(currentUrl, fetchOptions);
+      gasRes = await fetch(currentUrl, currentOptions);
       if ([301, 302, 303, 307, 308].includes(gasRes.status)) {
         const location = gasRes.headers.get('location');
         if (!location) break;
         currentUrl = new URL(location, currentUrl).toString();
+        // リダイレクト先は実行結果を取得するだけなので、2回目以降は常にGETにする
+        // （ボディを再送しない。doPost/doGetの処理は最初のリクエストで既に完了している）
+        currentOptions = { method: 'GET', redirect: 'manual' };
         continue;
       }
       break;
